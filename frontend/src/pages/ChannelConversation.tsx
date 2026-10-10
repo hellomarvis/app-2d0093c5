@@ -4,9 +4,11 @@ import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { InitialsAvatar } from '@/components/common/InitialsAvatar';
 import { EmptyState, ErrorState, LoadingState } from '@/components/common/states';
 import { apiClient, ApiError } from '@/lib/apiClient';
+import { GenerateImageButton } from '@/components/capabilities/GenerateImageButton';
 
 interface Member { id: number; userId: number; memberDisplayName: string; isOwner: boolean }
 interface ChannelDetail {
@@ -25,6 +27,7 @@ export const ChannelConversation = (): React.ReactElement => {
   const [draft, setDraft] = React.useState('');
   const [sending, setSending] = React.useState(false);
   const [seamNotice, setSeamNotice] = React.useState<string | null>(null);
+  const [imagePrompt, setImagePrompt] = React.useState('');
 
   const load = React.useCallback(() => {
     if (!id) return;
@@ -105,9 +108,12 @@ export const ChannelConversation = (): React.ReactElement => {
                   </div>
                   <div className="mt-0.5 text-base text-foreground">{message.body}</div>
                   {message.mediaUrl && (
-                    <div className="mt-2 flex h-28 items-center justify-center rounded-lg bg-gradient-to-br from-primary/20 via-background to-secondary/10 p-3">
-                      <strong className="text-sm text-foreground">Media attachment</strong>
-                    </div>
+                    <img
+                      src={message.mediaUrl}
+                      alt={message.body}
+                      className="mt-2 max-w-xs rounded-lg border border-border"
+                      loading="lazy"
+                    />
                   )}
                 </div>
               </article>
@@ -142,6 +148,31 @@ export const ChannelConversation = (): React.ReactElement => {
         ) : (
           <EmptyState className="mt-4" title="No summary yet" description="Summaries and key insights appear here once requested." />
         )}
+
+        <div className="mt-6 border-t border-border pt-4">
+          <h3 className="text-sm font-semibold text-foreground mb-2">Generate AI image</h3>
+          <p className="text-xs text-muted-foreground mb-3">Describe an image to share in the channel.</p>
+          <Input
+            value={imagePrompt}
+            onChange={(e) => setImagePrompt(e.target.value)}
+            placeholder="A sunset over mountains…"
+            className="mb-2 text-sm"
+            disabled={channel.isArchived}
+          />
+          <GenerateImageButton
+            prompt={imagePrompt.trim()}
+            imageSize="landscape_4_3"
+            showPreview={false}
+            disabled={channel.isArchived || !imagePrompt.trim()}
+            onReady={(result) => {
+              apiClient
+                .post(`/api/channels/${id}/media`, { kind: 'image', prompt: imagePrompt.trim(), mediaUrl: result.url })
+                .then(() => { setImagePrompt(''); load(); toast.success('Image shared in channel'); })
+                .catch((err) => toast.error(err instanceof ApiError ? err.message : 'Failed to share image'));
+            }}
+            onError={(msg) => toast.error(msg)}
+          />
+        </div>
       </aside>
     </div>
   );

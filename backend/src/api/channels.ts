@@ -3,6 +3,7 @@ import { prisma } from '../lib/prisma';
 import { handlePrismaError } from '../lib/handleError';
 import { IntegrationNotConfiguredError, handleSeamError } from '../lib/integrationSeam';
 import { generateText, TextGenError } from '../custom/capabilities/textGen';
+import { generateImage, ImageGenError } from '../custom/capabilities/imageGen';
 
 async function membership(channelId: number, userId: number) {
   return prisma.channelMember.findUnique({ where: { channelId_userId: { channelId, userId } } });
@@ -378,7 +379,6 @@ async function generateSummary(req: Request, res: Response): Promise<any> {
   }
 }
 
-// @integration-seam image-gen chat-image
 // @integration-seam video-gen chat-video
 async function generateMedia(req: Request, res: Response): Promise<any> {
   const channel = await loadChannel(req, res);
@@ -387,15 +387,47 @@ async function generateMedia(req: Request, res: Response): Promise<any> {
   if (!req.user!.isAdmin && !member) return res.status(403).json({ message: "You don't have access to this channel." });
   if (channel.isArchived) return res.status(409).json({ message: 'This channel is archived.' });
 
-  const { kind, prompt } = req.body;
+  const { kind, prompt, mediaUrl: providedUrl } = req.body;
   if (kind !== 'image' && kind !== 'video') return res.status(400).json({ message: 'kind must be "image" or "video"' });
   if (typeof prompt !== 'string' || prompt.trim().length < 3 || prompt.length > 500) {
     return res.status(400).json({ message: 'Prompt must be 3-500 characters' });
   }
 
+  if (kind === 'video') {
+    try {
+      throw new IntegrationNotConfiguredError('Google AI (Gemini & Veo)');
+    } catch (error) {
+      if (handleSeamError(error, res)) return;
+      return handlePrismaError(error, res);
+    }
+  }
+
+  // kind === 'image'
   try {
-    throw new IntegrationNotConfiguredError(kind === 'image' ? 'Fal AI' : 'Google AI (Gemini & Veo)');
+    let mediaUrl: string;
+    if (typeof providedUrl === 'string' && providedUrl.startsWith('http')) {
+      mediaUrl = providedUrl;
+    } else {
+      const result = await generateImage({ prompt: prompt.trim(), imageSize: 'landscape_4_3' });
+      mediaUrl = result.url;
+    }
+    const message = await prisma.message.create({
+      data: {
+        channelId: channel.id,
+        authorId: req.user!.id,
+        authorDisplayName: req.user!.email,
+        body: prompt.trim(),
+        kind: 'ai_image',
+        mediaUrl,
+        prompt: prompt.trim(),
+      },
+    });
+    await prisma.channel.update({ where: { id: channel.id }, data: { lastMessageAt: new Date() } });
+    return res.status(201).json(message);
   } catch (error) {
+    if (error instanceof ImageGenError) {
+      return res.status(error.status).json({ message: error.message });
+    }
     if (handleSeamError(error, res)) return;
     return handlePrismaError(error, res);
   }

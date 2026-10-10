@@ -17,6 +17,7 @@ import config from '../config';
 import { prisma } from './lib/prisma';
 import aiRouter, { transcribeRouter } from './custom/integrations/openai';
 import { analyzeImageRouter } from './custom/integrations/openai';
+import imageGenCapabilityRouter from './custom/capabilities/imageGen.router';
 
 const app = express();
 
@@ -66,6 +67,7 @@ app.use('/api/inbox', inboxRoutes);
 // Example: app.use('/api/search', searchRoutes);
 app.use('/api/uploads', uploadRoutes); // image uploads → platform proxy (see "Image uploads" in backend/CLAUDE.md; never touch S3/AWS directly)
 app.use('/api/ai', aiRouter);
+app.use('/api/capabilities/image-gen', imageGenCapabilityRouter);
 
 // Serve frontend static files (production: vite build output copied to public/)
 const publicDir = join(__dirname, '..', '..', 'public');
