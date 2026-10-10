@@ -1,0 +1,211 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Multi-tenancy pattern ────────────────────────────────────────────────────
+// tenantId is a string key that scopes every row to a specific project/tenant.
+// For the MVP generator: each generated project gets its own tenantId value.
+// Always filter queries by tenantId when serving multi-tenant data.
+// ─────────────────────────────────────────────────────────────────────────────
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  tenantId  String   @default("default") @map("tenant_id")
+  // Every generated app ships with admin support out of the box. The
+  // first admin row is created by `prisma/seed.ts` (idempotent upsert);
+  // additional admins are promoted by toggling this flag.
+  isAdmin   Boolean  @default(false) @map("is_admin")
+  // Display identity + workspace role/status (NexusAI). `role` drives the
+  // Admin Users role selector and People Directory badge; `isAdmin` remains
+  // the actual JWT authorization flag (role: "admin" implies isAdmin: true).
+  displayName String  @default("New Member") @map("display_name")
+  role        String  @default("professional") @map("role") // 'admin' | 'professional' | 'developer'
+  status      String  @default("active") @map("status") // 'active' | 'suspended'
+  // Forgot-password flow (src/api/auth.ts): SHA-256 of the one-time reset
+  // token emailed to the user — the raw token is never stored — and when it
+  // stops working. Both cleared once the password is reset.
+  passwordResetTokenHash String?   @unique @map("password_reset_token_hash")
+  passwordResetExpiresAt DateTime? @map("password_reset_expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([tenantId])
+  @@map("users")
+}
+
+// ── DOMAIN MODELS GO HERE ─────────────────────────────────────────────
+// Add the app's domain models below. Every user-visible lifecycle event
+// gets a timestamp field; humans are displayed by name, never email/id.
+
+model Channel {
+  id            Int       @id @default(autoincrement())
+  tenantId      String    @default("default") @map("tenant_id")
+  name          String
+  purpose       String    @default("")
+  type          String    @default("channel") // 'channel' | 'direct'
+  isArchived    Boolean   @default(false) @map("is_archived")
+  archivedAt    DateTime? @map("archived_at")
+  createdById   Int       @map("created_by_id")
+  createdByName String    @map("created_by_name")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  lastMessageAt DateTime  @default(now()) @map("last_message_at")
+  summaryStatus String    @default("idle") @map("summary_status") // 'idle' | 'pending' | 'failed'
+
+  members     ChannelMember[]
+  messages    Message[]
+  attachments Attachment[]
+  summaries   ConversationSummary[]
+
+  @@index([tenantId])
+  @@map("channels")
+}
+
+model ChannelMember {
+  id                Int      @id @default(autoincrement())
+  channelId         Int      @map("channel_id")
+  userId            Int      @map("user_id")
+  memberDisplayName String   @map("member_display_name")
+  isOwner           Boolean  @default(false) @map("is_owner")
+  joinedAt          DateTime @default(now()) @map("joined_at")
+
+  channel Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+
+  @@unique([channelId, userId])
+  @@map("channel_members")
+}
+
+model Message {
+  id                Int       @id @default(autoincrement())
+  channelId         Int       @map("channel_id")
+  authorId          Int       @map("author_id")
+  authorDisplayName String    @map("author_display_name")
+  body              String    @default("")
+  kind              String    @default("text") // 'text' | 'ai_image' | 'ai_video' | 'attachment' | 'system'
+  mediaUrl          String?   @map("media_url")
+  prompt            String?
+  createdAt         DateTime  @default(now()) @map("created_at")
+  isDeleted         Boolean   @default(false) @map("is_deleted")
+  deletedAt         DateTime? @map("deleted_at")
+  deletedByName     String?   @map("deleted_by_name")
+
+  channel Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+
+  @@index([channelId])
+  @@map("messages")
+}
+
+model Attachment {
+  id            Int      @id @default(autoincrement())
+  channelId     Int      @map("channel_id")
+  messageId     Int?     @map("message_id")
+  sourceType    String   @map("source_type") // 'drive' | 'doc' | 'sheet'
+  title         String
+  extractedText String?  @map("extracted_text")
+  sharedById    Int      @map("shared_by_id")
+  sharedByName  String   @map("shared_by_name")
+  sharedAt      DateTime @default(now()) @map("shared_at")
+
+  channel Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+
+  @@index([channelId])
+  @@map("attachments")
+}
+
+model ConversationSummary {
+  id              Int      @id @default(autoincrement())
+  channelId       Int      @map("channel_id")
+  summaryText     String   @map("summary_text")
+  keyInsights     Json     @map("key_insights")
+  keyDecisions    Json     @map("key_decisions")
+  messagesCovered Int      @map("messages_covered")
+  generatedById   Int      @map("generated_by_id")
+  generatedByName String   @map("generated_by_name")
+  generatedAt     DateTime @default(now()) @map("generated_at")
+
+  channel Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+
+  @@index([channelId])
+  @@map("conversation_summaries")
+}
+
+model RepositoryAnalysis {
+  id               Int       @id @default(autoincrement())
+  userId           Int       @map("user_id")
+  repoOwnerName    String    @map("repo_owner_name")
+  repoName         String    @map("repo_name")
+  repoDescription  String    @default("") @map("repo_description")
+  defaultBranch    String    @default("main") @map("default_branch")
+  status           String    @default("idle") // 'idle' | 'pending' | 'complete' | 'failed'
+  codeSummary      String?   @map("code_summary")
+  architectureText String?   @map("architecture_text")
+  dependenciesText String?   @map("dependencies_text")
+  potentialIssues  Json?     @map("potential_issues")
+  errorMessage     String?   @map("error_message")
+  requestedByName  String    @map("requested_by_name")
+  requestedAt      DateTime  @default(now()) @map("requested_at")
+  completedAt      DateTime? @map("completed_at")
+
+  questions RepoQuestion[]
+
+  @@index([userId])
+  @@map("repository_analyses")
+}
+
+model RepoQuestion {
+  id            Int      @id @default(autoincrement())
+  analysisId    Int      @map("analysis_id")
+  questionText  String   @map("question_text")
+  answerText    String   @map("answer_text")
+  askedByName   String   @map("asked_by_name")
+  askedAt       DateTime @default(now()) @map("asked_at")
+
+  analysis RepositoryAnalysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+
+  @@index([analysisId])
+  @@map("repo_questions")
+}
+
+model AssistantQuestion {
+  id           Int      @id @default(autoincrement())
+  userId       Int      @map("user_id")
+  questionText String   @map("question_text")
+  answerText   String   @map("answer_text")
+  sourcesUsed  Json     @map("sources_used")
+  askedAt      DateTime @default(now()) @map("asked_at")
+
+  @@index([userId])
+  @@map("assistant_questions")
+}
+
+model ModerationAction {
+  id           Int      @id @default(autoincrement())
+  tenantId     String   @default("default") @map("tenant_id")
+  actionType   String   @map("action_type") // 'message_removed' | 'member_removed' | 'channel_archived' | 'user_suspended' | 'user_restored' | 'role_changed'
+  targetLabel  String   @map("target_label")
+  reason       String   @default("")
+  actedById    Int      @map("acted_by_id")
+  actedByName  String   @map("acted_by_name")
+  actedAt      DateTime @default(now()) @map("acted_at")
+
+  @@index([tenantId])
+  @@map("moderation_actions")
+}
+
+model IntegrationSetting {
+  id            Int      @id @default(autoincrement())
+  tenantId      String   @default("default") @map("tenant_id")
+  serviceName   String   @map("service_name")
+  isEnabled     Boolean  @default(true) @map("is_enabled")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  updatedByName String   @default("System") @map("updated_by_name")
+
+  @@unique([tenantId, serviceName])
+  @@map("integration_settings")
+}

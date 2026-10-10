@@ -1,0 +1,294 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+@import "tailwindcss";
+@import "tw-animate-css";
+/* ============================================================
+   FONT IMPORT — MUST STAY THE FIRST STATEMENT IN THIS FILE.
+   Tailwind v4's `@import "tailwindcss"` expands into non-import
+   statements, so any @import placed after it is DROPPED by
+   PostCSS ("@import must precede all other statements") and the
+   font silently never loads. To change the font: replace the
+   @import URL and update --font-sans below (Google Fonts only).
+   ============================================================ */
+
+
+
+
+@custom-variant dark (&:is(.dark *));
+
+/* ============================================================
+   THEME TOKENS
+   This block maps CSS variables → Tailwind utility classes.
+   e.g. --color-primary maps to bg-primary, text-primary, etc.
+   Do NOT edit this block. Edit :root / .dark instead.
+   ============================================================ */
+@theme inline {
+  /* Fonts — change --font-sans in :root to retheme typography */
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+  /* Display face for headlines — SYSTEM serif stack (zero imports, the
+     platform font whitelist stays intact). The serif/sans pairing is what
+     separates crafted products from templates. Headings get it by default
+     (base layer); opt out per-element with `font-sans`. */
+  --font-display: var(--font-display);
+
+  /* Border radius */
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  /* Colors */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+}
+
+/* ============================================================
+   LIGHT THEME
+   This is the single place to retheme the entire app.
+
+   HOW TO CHANGE COLORS:
+   Use oklch(lightness chroma hue) format.
+     lightness: 0 = black, 1 = white
+     chroma: 0 = gray, higher = more vivid (0.2 is very saturated)
+     hue: 0–360 (0/360=red, 120=green, 240=blue, 270=purple)
+
+   QUICK EXAMPLES:
+     Blue primary:   oklch(0.5 0.2 240)   foreground: oklch(0.98 0 0)
+     Green primary:  oklch(0.5 0.18 145)  foreground: oklch(0.98 0 0)
+     Purple primary: oklch(0.5 0.2 270)   foreground: oklch(0.98 0 0)
+     Red primary:    oklch(0.5 0.22 20)   foreground: oklch(0.98 0 0)
+
+   OKLCH PICKER: https://oklch.com
+
+   HOW TO CHANGE FONTS:
+   Replace the font name in --font-sans (and update the @import above).
+   --font-mono controls code blocks.
+   ============================================================ */
+:root {
+  /* ── Typography ─────────────────────────────────────────── */
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'IBM Plex Mono', 'SFMono-Regular', Consolas, monospace;
+  --font-display: 'Inter', system-ui, -apple-system, sans-serif;
+
+  /* ── Shape ──────────────────────────────────────────────── */
+  --radius: 10px; /* border-radius base — matches the approved design */
+
+  /* ── Core surfaces ──────────────────────────────────────── */
+  --background: #0a0d14;          /* page background (design: --ink) */
+  --foreground: #e8edf5;      /* default text (design: --text) */
+
+  /* ── Cards & popovers ───────────────────────────────────── */
+  --card: #171e2b;             /* design: --panel */
+  --card-foreground: #e8edf5;
+  --popover: #171e2b;
+  --popover-foreground: #e8edf5;
+
+  /* ── Primary action color (buttons, links, focus rings) ─── */
+  --primary: #8b7cff;         /* design: --violet — the brand/CTA color */
+  --primary-foreground: #ffffff;
+
+  /* ── Secondary / muted / accent ─────────────────────────── */
+  --secondary: #42d3e8;       /* design: --cyan */
+  --secondary-foreground: #0a0d14;
+  --muted: #202a3a;           /* design: --lift */
+  --muted-foreground: #98a6ba; /* design: --ds-muted */
+  --accent: #ff6b74;          /* design: --coral */
+  --accent-foreground: #0a0d14;
+
+  /* ── Destructive (errors, delete actions) ───────────────── */
+  --destructive: #ff6b74;     /* design: --coral, matches .btn.danger */
+
+  /* ── Form & border elements ─────────────────────────────── */
+  --border: #2b3749;          /* design: --line */
+  --input: #2b3749;
+  --ring: #42d3e8;            /* design: focus-visible outline uses --cyan */
+}
+
+/* ============================================================
+   DARK THEME
+   Applied when <html> has class="dark".
+   Same variables — adjusted for dark backgrounds.
+   ============================================================ */
+.dark {
+  --background: #0a0d14;
+  --foreground: #e8edf5;
+  --card: #171e2b;
+  --card-foreground: #e8edf5;
+  --popover: #171e2b;
+  --popover-foreground: #e8edf5;
+  --primary: #8b7cff;
+  --primary-foreground: #ffffff;
+  --secondary: #42d3e8;
+  --secondary-foreground: #0a0d14;
+  --muted: #202a3a;
+  --muted-foreground: #98a6ba;
+  --accent: #ff6b74;
+  --accent-foreground: #0a0d14;
+  --destructive: #ff6b74;
+  --border: #2b3749;
+  --input: #2b3749;
+  --ring: #42d3e8;
+}
+
+/* ============================================================
+   BASE STYLES
+   ============================================================ */
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    /* In-page anchor nav (href="#section") scrolls smoothly, and lands BELOW
+       the sticky navbar (header is h-14 = 3.5rem) instead of hidden under it.
+       Works for both native <a href="#id"> and the ScrollToHash handler. */
+    scroll-behavior: smooth;
+    scroll-padding-top: 5rem;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-sans);
+  }
+  code, pre, kbd {
+    font-family: var(--font-mono);
+  }
+  /* Editorial pairing by default: page-level headings render in the display
+     serif on EVERY page (landing AND authed) so the whole product shares one
+     voice. Component-level headings (cards, dialogs) stay sans via their own
+     text-* classes; opt any element out with `font-sans`. */
+  h1, h2 {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
+  }
+}
+
+/* ============================================================
+   CRAFT UTILITIES — zero-cost visual depth, available everywhere.
+   These encode the reference-landing's craft signals as one-class
+   utilities so every build starts world-class instead of flat.
+   ============================================================ */
+
+/* Layered hero/CTA wash: two radial light sources from the brand primary
+   over the page background + a faint noise grain for texture. */
+.wash {
+  background:
+    radial-gradient(90rem 40rem at 15% -10%, color-mix(in oklab, var(--primary) 14%, transparent), transparent 60%),
+    radial-gradient(70rem 34rem at 90% 0%, color-mix(in oklab, var(--primary) 9%, transparent), transparent 55%),
+    var(--background);
+  position: relative;
+}
+.wash::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E");
+}
+/* Lift content above the ::after grain — but NEVER override a child that
+   positions itself (e.g. an absolute full-bleed hero image layer). A bare
+   `.wash > *` rule beat Tailwind's `.absolute` (same specificity, later in
+   this file) and dropped hero images into normal flow. */
+.wash > :not(.absolute, .fixed) { position: relative; z-index: 1; }
+/* Dark surfaces swallow subtle tints — double the light sources there. */
+.dark .wash {
+  background:
+    radial-gradient(90rem 40rem at 15% -10%, color-mix(in oklab, var(--primary) 28%, transparent), transparent 60%),
+    radial-gradient(70rem 34rem at 90% 0%, color-mix(in oklab, var(--primary) 18%, transparent), transparent 55%),
+    var(--background);
+}
+.dark .band {
+  background: color-mix(in oklab, var(--primary) 9%, var(--background));
+}
+
+/* Tinted section band — alternates page rhythm without new colors. */
+.band {
+  background: color-mix(in oklab, var(--primary) 4%, var(--background));
+}
+
+/* Card depth tiers (soft ambient → floating) + hover lift. */
+.shadow-card { box-shadow: 0 2px 10px color-mix(in oklab, var(--foreground) 7%, transparent); }
+.shadow-float { box-shadow: 0 14px 40px -12px color-mix(in oklab, var(--foreground) 22%, transparent); }
+.lift { transition: transform 200ms ease, box-shadow 200ms ease; }
+.lift:hover { transform: translateY(-3px); box-shadow: 0 14px 40px -12px color-mix(in oklab, var(--foreground) 22%, transparent); }
+
+/* Eyebrow label — letterspaced small-caps section kicker. */
+.eyebrow {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--primary);
+}
+
+/* Staggered entrance (CSS-only). Apply .rise + .rise-1/.rise-2/.rise-3. */
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.rise { animation: rise-in 600ms cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.rise-1 { animation-delay: 90ms; }
+.rise-2 { animation-delay: 180ms; }
+.rise-3 { animation-delay: 270ms; }
+
+/* ── APPROVED DESIGN — carried verbatim by the platform ── */
+/* Copied from the design the user approved in the wizard. These are the
+   real values behind its look and motion — use them, do not redefine them.
+   Names colliding with the app's own tokens are prefixed `--ds-`. */
+:root {
+  --ink: #0A0D14;
+  --graphite: #111722;
+  --panel: #171E2B;
+  --lift: #202A3A;
+  --line: #2B3749;
+  --text: #E8EDF5;
+  --ds-muted: #98A6BA;
+  --violet: #8B7CFF;
+  --cyan: #42D3E8;
+  --mint: #48D597;
+  --amber: #F2B84B;
+  --coral: #FF6B74;
+  --sidebar: 244px;
+  --topbar: 58px;
+}
+
+.dark {
+  --sidebar: 244px;
+  --topbar: 58px;
+}
+
+@media (max-width: 1050px) {
+  :root { --sidebar: 214px; }
+}
+
+@keyframes screenIn{from{opacity:.5;transform:translateX(5px)}to{opacity:1;transform:none}}
+@keyframes contextSwap{from{opacity:.35;transform:translateX(12px)}to{opacity:1;transform:none}}
+@keyframes trace{from{stroke-dashoffset:110;opacity:0}35%{opacity:1}to{stroke-dashoffset:0;opacity:0}}
+/* ── end approved design ── */
+
+/* ── NexusAI source-trace highlight ──────────────────────────────────────
+   The approved design's signature "AI insight → source" interaction: a
+   `.source-marker` click scrolls the source into view and highlights it.
+   Mirrors the design's `.focus-source` rule (lines 296-299 of the approved
+   HTML) using the app's token colors instead of hardcoded hex. */
+.nexus-source-focus {
+  background: color-mix(in oklab, var(--secondary) 6%, transparent);
+  box-shadow: 0 0 0 2px var(--secondary), 0 0 24px color-mix(in oklab, var(--secondary) 25%, transparent);
+  transition: box-shadow 0.2s ease, background 0.2s ease;
+  border-radius: var(--radius-md);
+}

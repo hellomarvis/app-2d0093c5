@@ -1,0 +1,28 @@
+version: 0.2
+
+phases:
+  pre_build:
+    commands:
+      - echo Logging in to Amazon ECR...
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
+  build:
+    commands:
+      # DOCKERFILE selects the image to build: default backend/Dockerfile (ECS),
+      # or backend/Dockerfile.lambda (serverless target). One CodeBuild project
+      # builds either from the same workspace.
+      - DOCKERFILE_PATH="${DOCKERFILE:-backend/Dockerfile}"
+      - echo "Building Docker image from $DOCKERFILE_PATH..."
+      # Fix Docker Hub rate-limit issue: replace bare node:20[-alpine] with the
+      # ECR public mirror. Claude Code SDK sometimes drops the ECR prefix.
+      - sed -i 's|FROM node:20-alpine|FROM public.ecr.aws/docker/library/node:20-alpine|g' "$DOCKERFILE_PATH"
+      - sed -i -E 's|FROM node:20 |FROM public.ecr.aws/docker/library/node:20 |g' "$DOCKERFILE_PATH"
+      # CodeBuild's classic docker build (no BuildKit) already produces a
+      # Docker-format manifest that AWS Lambda container images accept — no
+      # --provenance flag needed. (Adding it forces BuildKit, whose build sandbox
+      # on CodeBuild can't reach the npm registry → npm install network failure.)
+      - docker build -t $IMAGE_TAG -f "$DOCKERFILE_PATH" backend/
+  post_build:
+    commands:
+      - echo Pushing image to ECR...
+      - docker push $IMAGE_TAG
+      - echo Build completed on $(date)

@@ -1,0 +1,2151 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="var(--ink)">
+  <title>NexusAI — Workspace Home</title>
+  <style>
+    :root{
+      --ink:#0A0D14;
+      --graphite:#111722;
+      --panel:#171E2B;
+      --lift:#202A3A;
+      --line:#2B3749;
+      --text:#E8EDF5;
+      --muted:#98A6BA;
+      --violet:#8B7CFF;
+      --cyan:#42D3E8;
+      --mint:#48D597;
+      --amber:#F2B84B;
+      --coral:#FF6B74;
+      --sidebar:244px;
+      --topbar:58px;
+      --radius:10px;
+      font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      color-scheme:dark;
+    }
+
+    *{box-sizing:border-box}
+    html,body{margin:0;min-height:100%;background:var(--ink);color:var(--text)}
+    body{font-size:14px;overflow:hidden}
+    button,input,textarea,select{font:inherit}
+    button,a{color:inherit}
+    button{cursor:pointer}
+    :focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+    [hidden]{display:none!important}
+
+    .mono,.meta,.badge,.eyebrow,time{
+      font-family:"IBM Plex Mono","SFMono-Regular",Consolas,monospace;
+    }
+
+    .topbar{
+      position:fixed;
+      z-index:50;
+      inset:0 0 auto 0;
+      height:var(--topbar);
+      display:flex;
+      align-items:center;
+      border-bottom:1px solid var(--line);
+      background:rgba(17,23,34,.98);
+    }
+
+    .brand{
+      width:var(--sidebar);
+      height:100%;
+      display:flex;
+      align-items:center;
+      gap:11px;
+      padding:0 18px;
+      border-right:1px solid var(--line);
+      font-weight:760;
+      letter-spacing:-.02em;
+    }
+
+    .logo-mark{
+      width:28px;
+      height:28px;
+      display:grid;
+      place-items:center;
+      border-radius:8px;
+      background:var(--violet);
+      color:white;
+      font-weight:900;
+      box-shadow:0 0 0 4px rgba(139,124,255,.12);
+    }
+
+    .top-context{
+      flex:1;
+      min-width:0;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:0 18px;
+      gap:20px;
+    }
+
+    .breadcrumb{display:flex;align-items:center;gap:9px;min-width:0}
+    .breadcrumb strong{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .live{display:flex;align-items:center;gap:7px;color:var(--muted);font-size:12px}
+    .live-dot{width:7px;height:7px;border-radius:50%;background:var(--cyan);box-shadow:0 0 0 4px rgba(66,211,232,.1)}
+    .top-actions{display:flex;align-items:center;gap:8px}
+    .avatar{
+      width:30px;height:30px;border-radius:50%;display:grid;place-items:center;
+      background:#30405A;color:#fff;font-weight:700;font-size:12px;border:1px solid #475875;
+    }
+
+    .sidebar{
+      position:fixed;
+      z-index:40;
+      top:var(--topbar);
+      left:0;
+      bottom:0;
+      width:var(--sidebar);
+      display:flex;
+      flex-direction:column;
+      background:var(--graphite);
+      border-right:1px solid var(--line);
+      overflow-y:auto;
+    }
+
+    .nav-label{padding:20px 18px 8px;color:#6F7D91;font-size:10px;letter-spacing:.14em;text-transform:uppercase}
+    .primary-nav{padding:0 10px}
+    .nav-item{
+      display:flex;
+      align-items:center;
+      gap:11px;
+      min-height:40px;
+      padding:8px 10px;
+      margin:2px 0;
+      border-radius:8px;
+      color:var(--muted);
+      text-decoration:none;
+      font-size:13px;
+      transition:background .16s ease,color .16s ease,transform .16s ease;
+    }
+    .nav-item:hover{background:#182131;color:var(--text)}
+    .nav-item.active{background:var(--lift);color:white;box-shadow:inset 2px 0 var(--violet)}
+    .nav-item svg{width:17px;height:17px;flex:none}
+    .nav-item.admin-start{margin-top:12px}
+    .sidebar-note{
+      margin:auto 12px 12px;
+      padding:12px;
+      border:1px solid var(--line);
+      border-radius:9px;
+      background:#141B27;
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.45;
+    }
+    .sidebar-note strong{display:block;color:var(--text);margin-bottom:3px}
+
+    main{
+      position:fixed;
+      inset:var(--topbar) 0 0 var(--sidebar);
+      overflow:hidden;
+      background:var(--ink);
+    }
+
+    .screen{
+      display:none;
+      height:100%;
+      min-width:0;
+      overflow:auto;
+    }
+    .screen.active{display:block;animation:screenIn .16s ease}
+    @keyframes screenIn{from{opacity:.5;transform:translateX(5px)}to{opacity:1;transform:none}}
+
+    .screen-shell{min-height:100%;padding:24px}
+    .page-head{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:20px;
+      margin-bottom:20px;
+    }
+    h1,h2,h3,p{margin-top:0}
+    h1{font-size:27px;line-height:1.1;margin-bottom:7px;letter-spacing:-.035em}
+    h2{font-size:17px;line-height:1.25;margin-bottom:5px;letter-spacing:-.015em}
+    h3{font-size:14px;margin-bottom:5px}
+    .subtle{color:var(--muted);line-height:1.5}
+    .eyebrow{font-size:10px;text-transform:uppercase;letter-spacing:.14em;color:var(--cyan);margin-bottom:9px}
+    .meta{font-size:11px;color:var(--muted)}
+    .row{display:flex;align-items:center;gap:10px}
+    .row.wrap{flex-wrap:wrap}
+    .spread{justify-content:space-between}
+    .stack{display:grid;gap:12px}
+
+    .btn{
+      min-height:34px;
+      border:1px solid var(--line);
+      border-radius:8px;
+      padding:7px 11px;
+      background:#1A2230;
+      color:var(--text);
+      transition:transform .14s ease,border-color .14s ease,background .14s ease;
+    }
+    .btn:hover{transform:translateY(-1px);border-color:#50617A;background:var(--lift)}
+    .btn.primary{background:var(--violet);border-color:var(--violet);color:white;font-weight:700}
+    .btn.cyan{background:rgba(66,211,232,.1);border-color:rgba(66,211,232,.35);color:var(--cyan)}
+    .btn.danger{color:var(--coral);border-color:rgba(255,107,116,.35)}
+    .btn.ghost{background:transparent}
+    .btn.small{min-height:29px;padding:5px 9px;font-size:12px}
+    .icon-btn{width:34px;padding:0;display:grid;place-items:center}
+    .btn:disabled{cursor:not-allowed;opacity:.48;transform:none}
+
+    .panel{
+      background:var(--panel);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      min-width:0;
+    }
+    .panel-head{
+      min-height:55px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:14px;
+      padding:12px 15px;
+      border-bottom:1px solid var(--line);
+    }
+    .panel-body{padding:15px}
+    .divider{height:1px;background:var(--line);margin:14px 0}
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:5px;
+      width:max-content;
+      padding:4px 7px;
+      border:1px solid var(--line);
+      border-radius:99px;
+      color:var(--muted);
+      font-size:10px;
+      text-transform:uppercase;
+      letter-spacing:.05em;
+    }
+    .badge.success{color:var(--mint);border-color:rgba(72,213,151,.3)}
+    .badge.warn{color:var(--amber);border-color:rgba(242,184,75,.35)}
+    .badge.critical{color:var(--coral);border-color:rgba(255,107,116,.35)}
+    .badge.ai{color:#C4BAFF;border-color:rgba(139,124,255,.4);background:rgba(139,124,255,.08)}
+
+    .home-grid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(300px,.72fr);gap:16px}
+    .channel-list{display:grid}
+    .select-row{
+      position:relative;
+      display:grid;
+      grid-template-columns:minmax(0,1fr) auto;
+      gap:16px;
+      align-items:center;
+      width:100%;
+      padding:15px;
+      border:0;
+      border-bottom:1px solid var(--line);
+      background:transparent;
+      color:inherit;
+      text-align:left;
+    }
+    .select-row:last-child{border-bottom:0}
+    .select-row:hover,.select-row.selected{background:var(--lift)}
+    .select-row.selected:before{
+      content:"";position:absolute;left:0;top:10px;bottom:10px;width:2px;background:var(--violet);
+    }
+    .item-title{font-weight:700;margin-bottom:5px}
+    .item-copy{color:var(--muted);font-size:13px;line-height:1.45}
+    .summary-card{
+      padding:14px;border:1px solid var(--line);border-radius:9px;background:#141B27;
+    }
+
+    .workspace-split{
+      display:grid;
+      grid-template-columns:minmax(220px,28%) minmax(420px,46%) minmax(260px,26%);
+      height:100%;
+      min-height:0;
+      overflow:hidden;
+    }
+    .split-panel{
+      min-width:0;
+      height:100%;
+      overflow:auto;
+      background:var(--panel);
+      border-right:1px solid var(--line);
+    }
+    .split-panel:last-child{border-right:0;background:#131A25}
+    .sticky{
+      position:sticky;top:0;z-index:4;background:rgba(23,30,43,.97);backdrop-filter:blur(10px);
+    }
+    .collection{padding:9px}
+    .collection-item{
+      display:block;width:100%;border:0;border-radius:8px;background:transparent;color:inherit;
+      padding:11px;text-align:left;margin-bottom:3px;
+    }
+    .collection-item:hover,.collection-item.selected{background:var(--lift)}
+    .collection-item.selected{box-shadow:inset 2px 0 var(--violet)}
+    .split-panel.context-transition{animation:contextSwap .19s ease}
+    @keyframes contextSwap{from{opacity:.35;transform:translateX(12px)}to{opacity:1;transform:none}}
+    .conversation{padding:20px 20px 112px}
+    .message{
+      position:relative;
+      display:grid;
+      grid-template-columns:32px 1fr;
+      gap:10px;
+      margin:0 0 22px;
+      padding:8px;
+      border-radius:9px;
+      transition:box-shadow .2s ease,background .2s ease;
+    }
+    .message.focus-source,.source-block.focus-source{
+      background:rgba(66,211,232,.06);
+      box-shadow:0 0 0 2px var(--cyan),0 0 24px rgba(66,211,232,.12);
+    }
+    .message-head{display:flex;align-items:baseline;gap:8px;margin-bottom:6px}
+    .message-body{line-height:1.58;color:#D9E0EA}
+    .attachment{
+      margin-top:10px;padding:10px;border:1px solid var(--line);border-radius:8px;
+      display:flex;align-items:center;gap:10px;background:#131A25;
+    }
+    .media-tile{
+      margin-top:10px;min-height:112px;border:1px solid #40506A;border-radius:8px;
+      background:radial-gradient(circle at 70% 30%,rgba(66,211,232,.28),transparent 22%),linear-gradient(135deg,#24234F,#152737 55%,#1E1835);
+      display:flex;align-items:flex-end;padding:12px;color:white;
+    }
+    .composer{
+      position:sticky;bottom:0;z-index:5;padding:12px 15px;background:rgba(23,30,43,.98);
+      border-top:1px solid var(--line);
+    }
+    .composer textarea,.field{
+      width:100%;border:1px solid var(--line);border-radius:8px;background:#0E141D;color:var(--text);
+      padding:10px 11px;resize:vertical;min-height:40px;
+    }
+    .composer-tools{display:flex;justify-content:space-between;gap:10px;margin-top:9px;flex-wrap:wrap}
+    .toolbelt{display:flex;gap:6px;flex-wrap:wrap}
+    .intelligence{padding:15px}
+    .insight{
+      position:relative;padding:12px;margin-bottom:10px;border:1px solid var(--line);
+      border-radius:8px;background:#171F2C;
+    }
+    .source-marker{
+      display:inline-flex;align-items:center;gap:6px;margin-top:9px;padding:4px 7px;
+      border:1px solid rgba(66,211,232,.32);border-radius:99px;background:rgba(66,211,232,.07);
+      color:var(--cyan);font:10px "IBM Plex Mono",monospace;
+    }
+
+    .trace-layer{
+      position:fixed;z-index:100;inset:0;pointer-events:none;width:100%;height:100%;
+    }
+    .trace-path{
+      fill:none;stroke:var(--cyan);stroke-width:2;stroke-linecap:round;
+      filter:drop-shadow(0 0 5px rgba(66,211,232,.8));
+      stroke-dasharray:8 6;
+      animation:trace .75s ease both;
+    }
+    @keyframes trace{from{stroke-dashoffset:110;opacity:0}35%{opacity:1}to{stroke-dashoffset:0;opacity:0}}
+
+    .avatars{display:flex}
+    .avatars .avatar{margin-left:-7px}
+    .avatars .avatar:first-child{margin-left:0}
+
+    .details-grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(290px,.8fr);gap:16px}
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    label{display:grid;gap:6px;color:var(--muted);font-size:12px}
+    textarea.field{min-height:88px}
+    .form-states{margin-top:9px;min-height:18px}
+    .state{font:11px "IBM Plex Mono",monospace}
+    .state.idle{color:var(--muted)}
+    .state.pending{color:var(--amber)}
+    .state.success{color:var(--mint)}
+    .state.error,.state.unavailable{color:var(--coral)}
+
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:12px 13px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+    th{position:sticky;top:0;background:#151C28;color:var(--muted);font-size:11px;font-weight:600;z-index:2}
+    tbody tr:hover{background:#1A2331}
+    td .btn{margin:2px}
+
+    .people-grid,.repo-grid,.connection-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+    .person-card,.repo-card,.service-card{padding:15px}
+    .person-card .avatar{width:40px;height:40px}
+    .service-card{display:flex;flex-direction:column;min-height:184px}
+    .service-card .service-actions{margin-top:auto}
+    .service-icon{
+      width:34px;height:34px;display:grid;place-items:center;border:1px solid var(--line);
+      border-radius:8px;background:#101721;font-weight:800;color:var(--cyan);
+    }
+
+    .analysis-grid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(300px,.72fr);gap:16px}
+    .source-block{padding:15px;border-bottom:1px solid var(--line);transition:.2s}
+    .dependency-list{display:flex;flex-wrap:wrap;gap:7px}
+    .dependency{padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:#121925}
+
+    .assistant-stage{
+      min-height:calc(100vh - 155px);
+      display:grid;
+      grid-template-columns:minmax(0,1fr) minmax(280px,.36fr);
+      gap:16px;
+    }
+    .answer{padding:22px;font-size:15px;line-height:1.65}
+    .question-box{padding:15px;border-top:1px solid var(--line)}
+    .source-chip{display:inline-flex;padding:5px 8px;border-radius:99px;background:rgba(66,211,232,.08);color:var(--cyan);font-size:11px;margin:4px}
+
+    .empty-note{padding:16px;border:1px dashed #3A475B;border-radius:8px;color:var(--muted)}
+    footer{padding:22px 4px;color:#728096;font-size:12px;text-align:center}
+
+    .mobile-nav-toggle{display:none}
+
+    @media(max-width:1050px){
+      :root{--sidebar:214px}
+      .workspace-split{grid-template-columns:240px minmax(420px,1fr)}
+      .workspace-split .split-panel:last-child{
+        position:absolute;right:0;top:0;bottom:0;width:320px;z-index:15;
+        transform:translateX(calc(100% - 38px));transition:transform .2s ease;
+        box-shadow:-10px 0 30px rgba(0,0,0,.25);
+      }
+      .workspace-split .split-panel:last-child:hover,
+      .workspace-split .split-panel:last-child:focus-within{transform:none}
+      .home-grid,.details-grid,.analysis-grid{grid-template-columns:1fr}
+      .people-grid,.repo-grid,.connection-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+    }
+
+    @media(max-width:760px){
+      body{overflow:auto}
+      :root{--topbar:54px}
+      .brand{width:auto;border-right:0}
+      .top-context{padding-left:8px}
+      .live{display:none}
+      .mobile-nav-toggle{display:grid}
+      .sidebar{width:270px;transform:translateX(-100%);transition:transform .2s ease;box-shadow:20px 0 40px rgba(0,0,0,.4)}
+      .sidebar.open{transform:none}
+      main{inset:var(--topbar) 0 0 0}
+      .screen-shell{padding:16px}
+      .workspace-split{display:block;height:auto;overflow:visible}
+      .workspace-split .split-panel{height:auto;min-height:220px;border-right:0;border-bottom:1px solid var(--line)}
+      .workspace-split .split-panel:first-child{display:none}
+      .workspace-split .split-panel:last-child{position:static;width:auto;transform:none;box-shadow:none}
+      .conversation{padding:15px}
+      .composer{position:relative}
+      .home-grid,.details-grid,.analysis-grid,.assistant-stage{grid-template-columns:1fr}
+      .people-grid,.repo-grid,.connection-grid{grid-template-columns:1fr}
+      .page-head{align-items:stretch;flex-direction:column}
+      .form-grid{grid-template-columns:1fr}
+      .table-wrap{overflow:auto}
+      .top-actions .btn{display:none}
+    }
+
+    @media(prefers-reduced-motion:reduce){
+      *,*:before,*:after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}
+    }
+  </style>
+</head>
+<body>
+  <header data-sec="sec-0" class="topbar">
+    <div data-edit-id="sec-0:div:0" class="brand" aria-label="NexusAI logo">
+      <span data-edit-id="sec-0:span:1" class="logo-mark">N</span>
+      <span data-edit-id="sec-0:span:2">NexusAI</span>
+    </div>
+    <div data-edit-id="sec-0:div:3" class="top-context">
+      <div data-edit-id="sec-0:div:4" class="breadcrumb">
+        <button data-edit-id="sec-0:button:5" class="btn icon-btn mobile-nav-toggle" id="menuToggle" aria-label="Open navigation">☰</button>
+        <strong data-edit-id="sec-0:strong:6" id="screenTitle">Workspace Home</strong>
+        <span data-edit-id="sec-0:span:7" class="badge ai">AI connected</span>
+      </div>
+      <div data-edit-id="sec-0:div:8" class="top-actions">
+        <div data-edit-id="sec-0:div:9" class="live"><span data-edit-id="sec-0:span:10" class="live-dot"></span>Real-time workspace</div>
+        <button data-edit-id="sec-0:button:11" class="btn small" data-route="/ai-assistant">Ask NexusAI</button>
+        <div data-edit-id="sec-0:div:12" class="avatar" aria-label="Signed-in user">AR</div>
+      </div>
+    </div>
+  </header>
+
+  <aside data-sec="sec-1" class="sidebar" id="sidebar">
+    <div data-edit-id="sec-1:div:0" class="nav-label">Workspace</div>
+    <nav class="primary-nav" aria-label="Primary navigation">
+      <a data-edit-id="sec-1:a:1" class="nav-item active" href="/workspace-home" data-route="/workspace-home">
+        <span data-edit-id="sec-1:span:2">⌂</span><span data-edit-id="sec-1:span:3">Workspace Home</span>
+      </a>
+      <a data-edit-id="sec-1:a:4" class="nav-item" href="/people" data-route="/people">
+        <span data-edit-id="sec-1:span:5">◎</span><span data-edit-id="sec-1:span:6">People Directory</span>
+      </a>
+      <a data-edit-id="sec-1:a:7" class="nav-item" href="/inbox" data-route="/inbox">
+        <span data-edit-id="sec-1:span:8">▱</span><span data-edit-id="sec-1:span:9">Unified Inbox</span>
+      </a>
+      <a data-edit-id="sec-1:a:10" class="nav-item" href="/repositories" data-route="/repositories">
+        <span data-edit-id="sec-1:span:11">⌘</span><span data-edit-id="sec-1:span:12">Repositories</span>
+      </a>
+      <a data-edit-id="sec-1:a:13" class="nav-item" href="/ai-assistant" data-route="/ai-assistant">
+        <span data-edit-id="sec-1:span:14">✦</span><span data-edit-id="sec-1:span:15">AI Assistant</span>
+      </a>
+      <a data-edit-id="sec-1:a:16" class="nav-item" href="/connections" data-route="/connections">
+        <span data-edit-id="sec-1:span:17">⌁</span><span data-edit-id="sec-1:span:18">Connections</span>
+      </a>
+      <a data-edit-id="sec-1:a:19" class="nav-item admin-start" href="/admin/users" data-route="/admin/users">
+        <span data-edit-id="sec-1:span:20">♙</span><span data-edit-id="sec-1:span:21">Admin Users</span>
+      </a>
+      <a data-edit-id="sec-1:a:22" class="nav-item" href="/admin/moderation" data-route="/admin/moderation">
+        <span data-edit-id="sec-1:span:23">◇</span><span data-edit-id="sec-1:span:24">Admin Moderation</span>
+      </a>
+      <a data-edit-id="sec-1:a:25" class="nav-item" href="/admin/integrations" data-route="/admin/integrations">
+        <span data-edit-id="sec-1:span:26">⚙</span><span data-edit-id="sec-1:span:27">Admin Integrations</span>
+      </a>
+    </nav>
+    <div data-edit-id="sec-1:div:28" class="sidebar-note">
+      <strong data-edit-id="sec-1:strong:29">Permission-aware intelligence</strong>
+      Answers use only conversations, files, inboxes, and repositories you can access.
+    </div>
+  </aside>
+
+  <main>
+    <!-- WORKSPACE HOME -->
+    <section data-sec="sec-2" class="screen active" data-screen="/workspace-home" aria-labelledby="home-title">
+      <div data-edit-id="sec-2:div:0" class="screen-shell">
+        <header class="page-head">
+          <div data-edit-id="sec-2:div:1">
+            <div data-edit-id="sec-2:div:2" class="eyebrow">Operational nexus</div>
+            <h1 data-edit-id="sec-2:h1:3" id="home-title" data-bind="workspace-home.user_greeting">Good morning, Alex</h1>
+            <p data-edit-id="sec-2:p:4" class="subtle">Your channels, messages, and recent AI knowledge are organized around the work that needs attention.</p>
+          </div>
+          <div data-edit-id="sec-2:div:5" class="row wrap">
+            <button data-edit-id="sec-2:button:6" class="btn" id="startDmHome">Start direct message</button>
+            <button data-edit-id="sec-2:button:7" class="btn primary" id="createChannelOpen">Create channel</button>
+          </div>
+        </header>
+
+        <div data-edit-id="sec-2:div:8" class="home-grid">
+          <section class="panel">
+            <div data-edit-id="sec-2:div:9" class="panel-head">
+              <div data-edit-id="sec-2:div:10">
+                <h2 data-edit-id="sec-2:h2:11">Active channels</h2>
+                <span data-edit-id="sec-2:span:12" class="meta">LIVE CONVERSATIONS</span>
+              </div>
+              <span data-edit-id="sec-2:span:13" class="badge success">Connected</span>
+            </div>
+            <div data-edit-id="sec-2:div:14" class="channel-list">
+              <button data-edit-id="sec-2:button:15" class="select-row selected" data-route="/channels/launch">
+                <div data-edit-id="sec-2:div:16">
+                  <div data-edit-id="sec-2:div:17" class="item-title" data-bind="workspace-home.channel_name"># product-launch</div>
+                  <div data-edit-id="sec-2:div:18" class="item-copy" data-bind="workspace-home.channel_purpose">Coordinate launch decisions, assets, and customer communication.</div>
+                </div>
+                <div data-edit-id="sec-2:div:19" class="stack" style="justify-items:end">
+                  <span data-edit-id="sec-2:span:20" class="meta" data-bind="workspace-home.member_count">12 members</span>
+                  <span data-edit-id="sec-2:span:21" class="meta" data-bind="workspace-home.last_message_time">09:42</span>
+                  <span data-edit-id="sec-2:span:22" class="btn small">Open channel</span>
+                </div>
+              </button>
+              <button data-edit-id="sec-2:button:23" class="select-row" data-route="/channels/platform">
+                <div data-edit-id="sec-2:div:24">
+                  <div data-edit-id="sec-2:div:25" class="item-title" data-bind="workspace-home.channel_name"># platform-engineering</div>
+                  <div data-edit-id="sec-2:div:26" class="item-copy" data-bind="workspace-home.channel_purpose">Review architecture, repository health, and release readiness.</div>
+                </div>
+                <div data-edit-id="sec-2:div:27" class="stack" style="justify-items:end">
+                  <span data-edit-id="sec-2:span:28" class="meta" data-bind="workspace-home.member_count">8 members</span>
+                  <span data-edit-id="sec-2:span:29" class="meta" data-bind="workspace-home.last_message_time">08:18</span>
+                  <span data-edit-id="sec-2:span:30" class="btn small">Open channel</span>
+                </div>
+              </button>
+            </div>
+          </section>
+
+          <aside class="stack">
+            <section class="panel">
+              <div data-edit-id="sec-2:div:31" class="panel-head">
+                <h2 data-edit-id="sec-2:h2:32">Direct messages</h2>
+                <button data-edit-id="sec-2:button:33" class="btn small" id="newDm">New</button>
+              </div>
+              <div data-edit-id="sec-2:div:34" class="panel-body stack">
+                <button data-edit-id="sec-2:button:35" class="collection-item selected" data-route="/direct/maya">
+                  <div data-edit-id="sec-2:div:36" class="row">
+                    <span data-edit-id="sec-2:span:37" class="avatar">MC</span>
+                    <div data-edit-id="sec-2:div:38">
+                      <div data-edit-id="sec-2:div:39" class="item-title" data-bind="workspace-home.direct_message_counterpart">Maya Chen</div>
+                      <div data-edit-id="sec-2:div:40" class="meta">Open real-time conversation</div>
+                    </div>
+                  </div>
+                </button>
+                <button data-edit-id="sec-2:button:41" class="collection-item" data-route="/direct/jordan">
+                  <div data-edit-id="sec-2:div:42" class="row">
+                    <span data-edit-id="sec-2:span:43" class="avatar">JL</span>
+                    <div data-edit-id="sec-2:div:44">
+                      <div data-edit-id="sec-2:div:45" class="item-title" data-bind="workspace-home.direct_message_counterpart">Jordan Lee</div>
+                      <div data-edit-id="sec-2:div:46" class="meta">Open real-time conversation</div>
+                    </div>
+                  </div>
+                </button>
+              </div>
+            </section>
+
+            <section class="panel">
+              <div data-edit-id="sec-2:div:47" class="panel-head">
+                <h2 data-edit-id="sec-2:h2:48">Recent AI summaries</h2>
+                <span data-edit-id="sec-2:span:49" class="badge ai">Traceable</span>
+              </div>
+              <div data-edit-id="sec-2:div:50" class="panel-body stack">
+                <div data-edit-id="sec-2:div:51" class="summary-card">
+                  <div data-edit-id="sec-2:div:52" class="item-title" data-bind="workspace-home.summary_channel_name"># product-launch</div>
+                  <div data-edit-id="sec-2:div:53" class="row spread">
+                    <span data-edit-id="sec-2:span:54" class="meta" data-bind="workspace-home.summary_requester">Requested by Maya Chen</span>
+                    <span data-edit-id="sec-2:span:55" class="meta" data-bind="workspace-home.summary_generated_time">09:31</span>
+                  </div>
+                </div>
+                <div data-edit-id="sec-2:div:56" class="summary-card">
+                  <div data-edit-id="sec-2:div:57" class="item-title" data-bind="workspace-home.summary_channel_name"># platform-engineering</div>
+                  <div data-edit-id="sec-2:div:58" class="row spread">
+                    <span data-edit-id="sec-2:span:59" class="meta" data-bind="workspace-home.summary_requester">Requested by Jordan Lee</span>
+                    <span data-edit-id="sec-2:span:60" class="meta" data-bind="workspace-home.summary_generated_time">Yesterday</span>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </aside>
+        </div>
+
+        <section class="panel" id="createChannelPanel" hidden style="margin-top:16px">
+          <div data-edit-id="sec-2:div:61" class="panel-head"><h2 data-edit-id="sec-2:h2:62">Create a group channel</h2><button data-edit-id="sec-2:button:63" class="btn small" id="closeCreateChannel">Close</button></div>
+          <form class="panel-body app-form" id="createChannelForm">
+            <div data-edit-id="sec-2:div:64" class="form-grid">
+              <label data-edit-id="sec-2:label:65">Channel name<input class="field" name="channel" required placeholder="design-review"></label>
+              <label data-edit-id="sec-2:label:66">Purpose<input class="field" name="purpose" required placeholder="What will this group coordinate?"></label>
+            </div>
+            <div data-edit-id="sec-2:div:67" class="row" style="margin-top:12px"><button data-edit-id="sec-2:button:68" class="btn primary" type="submit">Create channel</button></div>
+            <div data-edit-id="sec-2:div:69" class="form-states" aria-live="polite">
+              <div data-edit-id="sec-2:div:70" class="state idle">Ready to create a managed group conversation.</div>
+              <div data-edit-id="sec-2:div:71" class="state pending" hidden>Creating channel…</div>
+              <div data-edit-id="sec-2:div:72" class="state success" hidden>Channel created.</div>
+              <div data-edit-id="sec-2:div:73" class="state error" hidden>Enter a channel name and purpose.</div>
+            </div>
+          </form>
+        </section>
+        <footer>NexusAI workspace</footer>
+      </div>
+    </section>
+
+    <!-- CHANNEL CONVERSATION -->
+    <section data-sec="sec-3" class="screen" data-screen="/channels/:id" aria-label="Channel Conversation">
+      <div data-edit-id="sec-3:div:0" class="workspace-split">
+        <aside class="split-panel">
+          <div data-edit-id="sec-3:div:1" class="panel-head sticky"><div data-edit-id="sec-3:div:2"><h2 data-edit-id="sec-3:h2:3">Channels</h2><span data-edit-id="sec-3:span:4" class="meta">GROUP CONVERSATIONS</span></div></div>
+          <div data-edit-id="sec-3:div:5" class="collection">
+            <button data-edit-id="sec-3:button:6" class="collection-item selected">
+              <div data-edit-id="sec-3:div:7" class="item-title" data-bind="channel-conversation.channel_name"># product-launch</div>
+              <div data-edit-id="sec-3:div:8" class="meta">Active conversation</div>
+            </button>
+            <button data-edit-id="sec-3:button:9" class="collection-item">
+              <div data-edit-id="sec-3:div:10" class="item-title" data-bind="channel-conversation.channel_name"># platform-engineering</div>
+              <div data-edit-id="sec-3:div:11" class="meta">Repository discussion</div>
+            </button>
+            <button data-edit-id="sec-3:button:12" class="collection-item" data-route="/workspace-home">← Workspace Home</button>
+          </div>
+        </aside>
+
+        <section class="split-panel" id="channelWorkingPanel">
+          <header class="panel-head sticky">
+            <div data-edit-id="sec-3:div:13">
+              <div data-edit-id="sec-3:div:14" class="row">
+                <h2 data-edit-id="sec-3:h2:15" data-bind="channel-conversation.channel_name"># product-launch</h2>
+                <span data-edit-id="sec-3:span:16" class="badge" data-bind="channel-conversation.archived_badge">Active</span>
+              </div>
+              <span data-edit-id="sec-3:span:17" class="subtle" data-bind="channel-conversation.channel_purpose">Coordinate launch decisions, assets, and customer communication.</span>
+            </div>
+            <div data-edit-id="sec-3:div:18" class="row">
+              <div data-edit-id="sec-3:div:19" class="avatars" data-bind="channel-conversation.member_avatars">MC · JL · AR</div>
+              <button data-edit-id="sec-3:button:20" class="btn small" data-route="/channels/launch/details">Details</button>
+            </div>
+          </header>
+
+          <div data-edit-id="sec-3:div:21" class="conversation">
+            <article class="message" id="source-message-launch">
+              <span data-edit-id="sec-3:span:22" class="avatar">MC</span>
+              <div data-edit-id="sec-3:div:23">
+                <div data-edit-id="sec-3:div:24" class="message-head">
+                  <strong data-edit-id="sec-3:strong:25" data-bind="channel-conversation.message_author">Maya Chen</strong>
+                  <time data-bind="channel-conversation.message_time">09:14</time>
+                </div>
+                <div data-edit-id="sec-3:div:26" class="message-body" data-bind="channel-conversation.message_body">The updated launch brief is in Drive. Please review the rollout sequence and flag any dependency that changes the customer announcement.</div>
+                <div data-edit-id="sec-3:div:27" class="attachment">
+                  <span data-edit-id="sec-3:span:28" class="service-icon">D</span>
+                  <div data-edit-id="sec-3:div:29">
+                    <strong data-edit-id="sec-3:strong:30" data-bind="channel-conversation.media_attachment">Launch rollout brief</strong>
+                    <div data-edit-id="sec-3:div:31" class="meta">Google Drive attachment · discuss in this channel</div>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <article class="message" id="source-message-dependency">
+              <span data-edit-id="sec-3:span:32" class="avatar">JL</span>
+              <div data-edit-id="sec-3:div:33">
+                <div data-edit-id="sec-3:div:34" class="message-head">
+                  <strong data-edit-id="sec-3:strong:35" data-bind="channel-conversation.message_author">Jordan Lee</strong>
+                  <time data-bind="channel-conversation.message_time">09:28</time>
+                </div>
+                <div data-edit-id="sec-3:div:36" class="message-body" data-bind="channel-conversation.message_body">The repository analysis found one release dependency we should resolve before the rollout begins. I linked the architecture notes in the thread.</div>
+              </div>
+            </article>
+
+            <article class="message">
+              <span data-edit-id="sec-3:span:37" class="avatar">AR</span>
+              <div data-edit-id="sec-3:div:38">
+                <div data-edit-id="sec-3:div:39" class="message-head">
+                  <strong data-edit-id="sec-3:strong:40" data-bind="channel-conversation.message_author">Alex Rivera</strong>
+                  <time data-bind="channel-conversation.message_time">09:42</time>
+                </div>
+                <div data-edit-id="sec-3:div:41" class="message-body" data-bind="channel-conversation.message_body">I generated a visual concept from the brief. We can share the final image or video in chat, then publish supported content through Instagram or Facebook when permissions allow.</div>
+                <div data-edit-id="sec-3:div:42" class="media-tile">
+                  <strong data-edit-id="sec-3:strong:43" data-bind="channel-conversation.media_attachment">AI-generated launch concept</strong>
+                </div>
+                <div data-edit-id="sec-3:div:44" class="row wrap" style="margin-top:8px">
+                  <button data-edit-id="sec-3:button:45" class="btn small">Share in chat</button>
+                  <button data-edit-id="sec-3:button:46" class="btn small">Share to Instagram</button>
+                  <button data-edit-id="sec-3:button:47" class="btn small">Share to Facebook</button>
+                  <span data-edit-id="sec-3:span:48" class="state unavailable" hidden>not set up yet</span>
+                </div>
+              </div>
+            </article>
+          </div>
+
+          <form class="composer app-form">
+            <textarea name="message" required aria-label="Channel message" placeholder="Message #product-launch"></textarea>
+            <div data-edit-id="sec-3:div:49" class="composer-tools">
+              <div data-edit-id="sec-3:div:50" class="toolbelt">
+                <button data-edit-id="sec-3:button:51" class="btn small external-action" type="button">Google Drive</button>
+                <button data-edit-id="sec-3:button:52" class="btn small external-action" type="button">Google Docs</button>
+                <button data-edit-id="sec-3:button:53" class="btn small external-action" type="button">Google Sheets</button>
+                <button data-edit-id="sec-3:button:54" class="btn small external-action" type="button">Generate image</button>
+                <button data-edit-id="sec-3:button:55" class="btn small external-action" type="button">Generate video</button>
+                <span data-edit-id="sec-3:span:56" class="state unavailable" hidden>not set up yet</span>
+              </div>
+              <button data-edit-id="sec-3:button:57" class="btn primary" type="submit">Send message</button>
+            </div>
+            <div data-edit-id="sec-3:div:58" class="form-states">
+              <div data-edit-id="sec-3:div:59" class="state idle">Ready to send in real time.</div>
+              <div data-edit-id="sec-3:div:60" class="state pending" hidden>Sending…</div>
+              <div data-edit-id="sec-3:div:61" class="state success" hidden>Message sent.</div>
+              <div data-edit-id="sec-3:div:62" class="state error" hidden>Write a message before sending.</div>
+            </div>
+          </form>
+        </section>
+
+        <aside class="split-panel">
+          <div data-edit-id="sec-3:div:63" class="panel-head sticky">
+            <div data-edit-id="sec-3:div:64"><h2 data-edit-id="sec-3:h2:65">Nexus intelligence</h2><span data-edit-id="sec-3:span:66" class="meta">SOURCES STAY ATTACHED</span></div>
+            <span data-edit-id="sec-3:span:67" class="badge ai">AI</span>
+          </div>
+          <div data-edit-id="sec-3:div:68" class="intelligence">
+            <button data-edit-id="sec-3:button:69" class="btn primary" style="width:100%;margin-bottom:12px">Summarise channel</button>
+            <section class="insight">
+              <div data-edit-id="sec-3:div:70" class="eyebrow">Conversation summary</div>
+              <p data-edit-id="sec-3:p:71" data-bind="channel-conversation.summary_text">The team is aligning the rollout brief with repository readiness before finalizing customer communication and generated campaign media.</p>
+              <button data-edit-id="sec-3:button:72" class="source-marker" data-source="#source-message-launch">↗ Source message 09:14</button>
+            </section>
+            <section class="insight">
+              <div data-edit-id="sec-3:div:73" class="eyebrow">Key insight</div>
+              <p data-edit-id="sec-3:p:74" data-bind="channel-conversation.key_insights">A release dependency may affect the rollout sequence and should be resolved before publication.</p>
+              <button data-edit-id="sec-3:button:75" class="source-marker" data-source="#source-message-dependency">↗ Source message 09:28</button>
+            </section>
+            <button data-edit-id="sec-3:button:76" class="btn cyan external-action" style="width:100%">Save summary to Google Docs</button>
+            <div data-edit-id="sec-3:div:77" class="state unavailable" hidden>not set up yet</div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- CHANNEL DETAILS -->
+    <section data-sec="sec-4" class="screen" data-screen="/channels/:id/details" aria-label="Channel Details">
+      <div data-edit-id="sec-4:div:0" class="screen-shell">
+        <header class="page-head">
+          <div data-edit-id="sec-4:div:1">
+            <div data-edit-id="sec-4:div:2" class="eyebrow">Channel governance</div>
+            <div data-edit-id="sec-4:div:3" class="row">
+              <h1 data-edit-id="sec-4:h1:4" data-bind="channel-details.channel_name"># product-launch</h1>
+              <span data-edit-id="sec-4:span:5" class="badge success" data-bind="channel-details.archived_state">Active</span>
+            </div>
+            <p data-edit-id="sec-4:p:6" data-bind="channel-details.channel_purpose">Coordinate launch decisions, assets, and customer communication.</p>
+          </div>
+          <button data-edit-id="sec-4:button:7" class="btn" data-route="/channels/launch">Back to conversation</button>
+        </header>
+
+        <div data-edit-id="sec-4:div:8" class="details-grid">
+          <div data-edit-id="sec-4:div:9" class="stack">
+            <section class="panel">
+              <div data-edit-id="sec-4:div:10" class="panel-head"><h2 data-edit-id="sec-4:h2:11">Channel settings</h2></div>
+              <form class="panel-body app-form" id="channelSettingsForm">
+                <div data-edit-id="sec-4:div:12" class="form-grid">
+                  <label data-edit-id="sec-4:label:13">Channel name<input class="field" name="channelName" required value="product-launch"></label>
+                  <label data-edit-id="sec-4:label:14">Creator<span data-edit-id="sec-4:span:15" class="field" data-bind="channel-details.creator_display_name">Maya Chen</span></label>
+                  <label data-edit-id="sec-4:label:16">Purpose<textarea class="field" name="channelPurpose" required>Coordinate launch decisions, assets, and customer communication.</textarea></label>
+                  <label data-edit-id="sec-4:label:17">Created date<span data-edit-id="sec-4:span:18" class="field mono" data-bind="channel-details.created_date">18 Mar 2025</span></label>
+                  <label data-edit-id="sec-4:label:19">Archived date<span data-edit-id="sec-4:span:20" class="field mono" data-bind="channel-details.archived_date">Not archived</span></label>
+                </div>
+                <div data-edit-id="sec-4:div:21" class="row wrap" style="margin-top:12px">
+                  <button data-edit-id="sec-4:button:22" class="btn primary" type="submit">Rename channel and edit purpose</button>
+                  <button data-edit-id="sec-4:button:23" class="btn danger" id="archiveChannel" type="button">Archive channel</button>
+                  <button data-edit-id="sec-4:button:24" class="btn ghost" id="leaveChannel" type="button">Leave channel</button>
+                </div>
+                <div data-edit-id="sec-4:div:25" class="form-states">
+                  <div data-edit-id="sec-4:div:26" class="state idle">Channel settings are ready to edit.</div>
+                  <div data-edit-id="sec-4:div:27" class="state pending" hidden>Saving settings…</div>
+                  <div data-edit-id="sec-4:div:28" class="state success" hidden>Channel settings saved.</div>
+                  <div data-edit-id="sec-4:div:29" class="state error" hidden>Channel name and purpose are required.</div>
+                </div>
+              </form>
+            </section>
+
+            <section class="panel">
+              <div data-edit-id="sec-4:div:30" class="panel-head"><h2 data-edit-id="sec-4:h2:31">Members</h2><button data-edit-id="sec-4:button:32" class="btn primary small" id="inviteMember">Invite member</button></div>
+              <div data-edit-id="sec-4:div:33" class="table-wrap">
+                <table id="channelMembers">
+                  <thead><tr><th data-edit-id="sec-4:th:34">Member</th><th data-edit-id="sec-4:th:35">Joined</th><th data-edit-id="sec-4:th:36">Action</th></tr></thead>
+                  <tbody>
+                    <tr>
+                      <td data-edit-id="sec-4:td:37" data-bind="channel-details.member_display_name">Maya Chen</td>
+                      <td data-edit-id="sec-4:td:38" class="mono" data-bind="channel-details.member_join_date">18 Mar 2025</td>
+                      <td data-edit-id="sec-4:td:39"><button data-edit-id="sec-4:button:40" class="btn danger small">Remove member</button></td>
+                    </tr>
+                    <tr>
+                      <td data-edit-id="sec-4:td:41" data-bind="channel-details.member_display_name">Jordan Lee</td>
+                      <td data-edit-id="sec-4:td:42" class="mono" data-bind="channel-details.member_join_date">19 Mar 2025</td>
+                      <td data-edit-id="sec-4:td:43"><button data-edit-id="sec-4:button:44" class="btn danger small">Remove member</button></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          </div>
+
+          <aside class="panel">
+            <div data-edit-id="sec-4:div:45" class="panel-head"><h2 data-edit-id="sec-4:h2:46">Shared history</h2></div>
+            <div data-edit-id="sec-4:div:47" class="panel-body stack">
+              <div data-edit-id="sec-4:div:48" class="summary-card">
+                <div data-edit-id="sec-4:div:49" class="item-title" data-bind="channel-details.attachment_title">Launch rollout brief</div>
+                <div data-edit-id="sec-4:div:50" class="meta" data-bind="channel-details.attachment_shared_by">Shared by Maya Chen</div>
+              </div>
+              <div data-edit-id="sec-4:div:51" class="summary-card">
+                <div data-edit-id="sec-4:div:52" class="item-title" data-bind="channel-details.attachment_title">Architecture review notes</div>
+                <div data-edit-id="sec-4:div:53" class="meta" data-bind="channel-details.attachment_shared_by">Shared by Jordan Lee</div>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <!-- DIRECT CONVERSATION -->
+    <section data-sec="sec-5" class="screen" data-screen="/direct/:id" aria-label="Direct Conversation">
+      <div data-edit-id="sec-5:div:0" class="workspace-split" style="grid-template-columns:280px minmax(440px,1fr) 300px">
+        <aside class="split-panel">
+          <div data-edit-id="sec-5:div:1" class="panel-head sticky"><h2 data-edit-id="sec-5:h2:2">Direct messages</h2></div>
+          <div data-edit-id="sec-5:div:3" class="collection">
+            <button data-edit-id="sec-5:button:4" class="collection-item selected"><div data-edit-id="sec-5:div:5" class="item-title" data-bind="direct-conversation.counterpart_display_name">Maya Chen</div><div data-edit-id="sec-5:div:6" class="meta">Real-time chat</div></button>
+            <button data-edit-id="sec-5:button:7" class="collection-item"><div data-edit-id="sec-5:div:8" class="item-title" data-bind="direct-conversation.counterpart_display_name">Jordan Lee</div><div data-edit-id="sec-5:div:9" class="meta">Real-time chat</div></button>
+            <button data-edit-id="sec-5:button:10" class="collection-item" data-route="/people">Find new people</button>
+          </div>
+        </aside>
+        <section class="split-panel">
+          <div data-edit-id="sec-5:div:11" class="panel-head sticky">
+            <div data-edit-id="sec-5:div:12"><h2 data-edit-id="sec-5:h2:13" data-bind="direct-conversation.counterpart_display_name">Maya Chen</h2><span data-edit-id="sec-5:span:14" class="meta">DIRECT CONVERSATION</span></div>
+            <span data-edit-id="sec-5:span:15" class="badge success">Live</span>
+          </div>
+          <div data-edit-id="sec-5:div:16" class="conversation">
+            <article class="message">
+              <span data-edit-id="sec-5:span:17" class="avatar">MC</span>
+              <div data-edit-id="sec-5:div:18">
+                <div data-edit-id="sec-5:div:19" class="message-head"><strong data-edit-id="sec-5:strong:20" data-bind="direct-conversation.message_author">Maya Chen</strong><time data-bind="direct-conversation.message_time">10:03</time></div>
+                <div data-edit-id="sec-5:div:21" class="message-body" data-bind="direct-conversation.message_body">Can you review the document summary before I send the email response?</div>
+                <div data-edit-id="sec-5:div:22" class="attachment"><span data-edit-id="sec-5:span:23" class="service-icon">D</span><strong data-edit-id="sec-5:strong:24" data-bind="direct-conversation.media_attachment">Customer response draft</strong></div>
+              </div>
+            </article>
+            <article class="message">
+              <span data-edit-id="sec-5:span:25" class="avatar">AR</span>
+              <div data-edit-id="sec-5:div:26">
+                <div data-edit-id="sec-5:div:27" class="message-head"><strong data-edit-id="sec-5:strong:28" data-bind="direct-conversation.message_author">Alex Rivera</strong><time data-bind="direct-conversation.message_time">10:07</time></div>
+                <div data-edit-id="sec-5:div:29" class="message-body" data-bind="direct-conversation.message_body">Yes. I’ll compare it with the shared brief and return the key differences here.</div>
+              </div>
+            </article>
+          </div>
+          <form class="composer app-form">
+            <textarea required placeholder="Message Maya Chen"></textarea>
+            <div data-edit-id="sec-5:div:30" class="composer-tools">
+              <div data-edit-id="sec-5:div:31" class="toolbelt">
+                <button data-edit-id="sec-5:button:32" class="btn small external-action" type="button">Google Drive</button>
+                <button data-edit-id="sec-5:button:33" class="btn small external-action" type="button">Google Docs</button>
+                <button data-edit-id="sec-5:button:34" class="btn small external-action" type="button">Google Sheets</button>
+                <button data-edit-id="sec-5:button:35" class="btn small external-action" type="button">Generate image</button>
+                <button data-edit-id="sec-5:button:36" class="btn small external-action" type="button">Generate video</button>
+                <span data-edit-id="sec-5:span:37" class="state unavailable" hidden>not set up yet</span>
+              </div>
+              <button data-edit-id="sec-5:button:38" class="btn primary" type="submit">Send message</button>
+            </div>
+            <div data-edit-id="sec-5:div:39" class="form-states">
+              <div data-edit-id="sec-5:div:40" class="state idle">Ready to send in real time.</div>
+              <div data-edit-id="sec-5:div:41" class="state pending" hidden>Sending…</div>
+              <div data-edit-id="sec-5:div:42" class="state success" hidden>Message sent.</div>
+              <div data-edit-id="sec-5:div:43" class="state error" hidden>Write a message before sending.</div>
+            </div>
+          </form>
+        </section>
+        <aside class="split-panel">
+          <div data-edit-id="sec-5:div:44" class="panel-head"><h2 data-edit-id="sec-5:h2:45">Shared context</h2></div>
+          <div data-edit-id="sec-5:div:46" class="intelligence" id="directDocumentContext">
+            <div data-edit-id="sec-5:div:47" class="insight">
+              <div data-edit-id="sec-5:div:48" class="eyebrow">Document discussion</div>
+              <p data-edit-id="sec-5:p:49">Ask AI to analyze, summarize, extract key information, or answer questions about shared documents without leaving the conversation.</p>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- PEOPLE -->
+    <section data-sec="sec-6" class="screen" data-screen="/people" aria-labelledby="people-title">
+      <div data-edit-id="sec-6:div:0" class="screen-shell">
+        <header class="page-head">
+          <div data-edit-id="sec-6:div:1"><div data-edit-id="sec-6:div:2" class="eyebrow">Connected workspace</div><h1 data-edit-id="sec-6:h1:3" id="people-title">People Directory</h1><p data-edit-id="sec-6:p:4" class="subtle">Find a collaborator and begin a real-time conversation.</p></div>
+        </header>
+        <div data-edit-id="sec-6:div:5" class="people-grid">
+          <article class="panel person-card">
+            <div data-edit-id="sec-6:div:6" class="row">
+              <span data-edit-id="sec-6:span:7" class="avatar" data-bind="people-directory.member_avatar_initial">MC</span>
+              <div data-edit-id="sec-6:div:8"><h2 data-edit-id="sec-6:h2:9" data-bind="people-directory.member_display_name">Maya Chen</h2><span data-edit-id="sec-6:span:10" class="badge" data-bind="people-directory.member_role">Connected Professional</span></div>
+            </div>
+            <div data-edit-id="sec-6:div:11" class="divider"></div>
+            <div data-edit-id="sec-6:div:12" class="meta" data-bind="people-directory.member_joined_date">Joined 18 Mar 2025</div>
+            <button data-edit-id="sec-6:button:13" class="btn primary" style="width:100%;margin-top:14px" data-route="/direct/maya">Start chat</button>
+          </article>
+          <article class="panel person-card">
+            <div data-edit-id="sec-6:div:14" class="row">
+              <span data-edit-id="sec-6:span:15" class="avatar" data-bind="people-directory.member_avatar_initial">JL</span>
+              <div data-edit-id="sec-6:div:16"><h2 data-edit-id="sec-6:h2:17" data-bind="people-directory.member_display_name">Jordan Lee</h2><span data-edit-id="sec-6:span:18" class="badge" data-bind="people-directory.member_role">Developer Collaborator</span></div>
+            </div>
+            <div data-edit-id="sec-6:div:19" class="divider"></div>
+            <div data-edit-id="sec-6:div:20" class="meta" data-bind="people-directory.member_joined_date">Joined 19 Mar 2025</div>
+            <button data-edit-id="sec-6:button:21" class="btn primary" style="width:100%;margin-top:14px" data-route="/direct/jordan">Start chat</button>
+          </article>
+          <article class="panel person-card">
+            <div data-edit-id="sec-6:div:22" class="row">
+              <span data-edit-id="sec-6:span:23" class="avatar" data-bind="people-directory.member_avatar_initial">SP</span>
+              <div data-edit-id="sec-6:div:24"><h2 data-edit-id="sec-6:h2:25" data-bind="people-directory.member_display_name">Sam Patel</h2><span data-edit-id="sec-6:span:26" class="badge" data-bind="people-directory.member_role">Admin</span></div>
+            </div>
+            <div data-edit-id="sec-6:div:27" class="divider"></div>
+            <div data-edit-id="sec-6:div:28" class="meta" data-bind="people-directory.member_joined_date">Joined 21 Mar 2025</div>
+            <button data-edit-id="sec-6:button:29" class="btn primary" style="width:100%;margin-top:14px" data-route="/direct/sam">Start chat</button>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- UNIFIED INBOX -->
+    <section data-sec="sec-7" class="screen" data-screen="/inbox" aria-label="Unified Inbox">
+      <div data-edit-id="sec-7:div:0" class="workspace-split">
+        <aside class="split-panel">
+          <div data-edit-id="sec-7:div:1" class="panel-head sticky">
+            <div data-edit-id="sec-7:div:2"><h2 data-edit-id="sec-7:h2:3">Unified Inbox</h2><span data-edit-id="sec-7:span:4" class="meta">GMAIL + SLACK</span></div>
+          </div>
+          <div data-edit-id="sec-7:div:5" class="collection">
+            <button data-edit-id="sec-7:button:6" class="collection-item selected">
+              <div data-edit-id="sec-7:div:7" class="item-title" data-bind="unified-inbox.thread_subject">Launch approval and rollout</div>
+              <div data-edit-id="sec-7:div:8" class="meta" data-bind="unified-inbox.counterpart_display_name">Maya Chen</div>
+              <div data-edit-id="sec-7:div:9" class="meta" data-bind="unified-inbox.last_activity_time">10:12</div>
+            </button>
+            <button data-edit-id="sec-7:button:10" class="collection-item">
+              <div data-edit-id="sec-7:div:11" class="item-title" data-bind="unified-inbox.thread_subject">Repository release check</div>
+              <div data-edit-id="sec-7:div:12" class="meta" data-bind="unified-inbox.counterpart_display_name">Jordan Lee</div>
+              <div data-edit-id="sec-7:div:13" class="meta" data-bind="unified-inbox.last_activity_time">09:48</div>
+            </button>
+          </div>
+          <div data-edit-id="sec-7:div:14" class="panel-body stack">
+            <button data-edit-id="sec-7:button:15" class="btn external-action">Connect Gmail</button>
+            <span data-edit-id="sec-7:span:16" class="state unavailable" hidden>not set up yet</span>
+            <button data-edit-id="sec-7:button:17" class="btn external-action">Connect Slack</button>
+            <span data-edit-id="sec-7:span:18" class="state unavailable" hidden>not set up yet</span>
+          </div>
+        </aside>
+
+        <section class="split-panel">
+          <div data-edit-id="sec-7:div:19" class="panel-head sticky">
+            <div data-edit-id="sec-7:div:20"><h2 data-edit-id="sec-7:h2:21" data-bind="unified-inbox.thread_subject">Launch approval and rollout</h2><span data-edit-id="sec-7:span:22" class="meta" data-bind="unified-inbox.counterpart_display_name">Maya Chen</span></div>
+            <span data-edit-id="sec-7:span:23" class="badge success">Gmail · Live</span>
+          </div>
+          <div data-edit-id="sec-7:div:24" class="conversation">
+            <article class="source-block" id="inbox-source">
+              <div data-edit-id="sec-7:div:25" class="meta" data-bind="unified-inbox.last_activity_time">10:12</div>
+              <p data-edit-id="sec-7:p:26" style="margin-top:12px" data-bind="unified-inbox.message_body">Please confirm whether the repository dependency changes our planned rollout date. If it does, update the customer response before sending.</p>
+            </article>
+          </div>
+          <form class="composer app-form">
+            <textarea required placeholder="Reply to this thread"></textarea>
+            <div data-edit-id="sec-7:div:27" class="composer-tools">
+              <div data-edit-id="sec-7:div:28" class="toolbelt">
+                <button data-edit-id="sec-7:button:29" class="btn small external-action" type="button">Send Slack message</button>
+                <span data-edit-id="sec-7:span:30" class="state unavailable" hidden>not set up yet</span>
+              </div>
+              <button data-edit-id="sec-7:button:31" class="btn primary" type="submit">Reply to thread</button>
+            </div>
+            <div data-edit-id="sec-7:div:32" class="form-states">
+              <div data-edit-id="sec-7:div:33" class="state idle">Ready to reply through the connected account.</div>
+              <div data-edit-id="sec-7:div:34" class="state pending" hidden>Sending reply…</div>
+              <div data-edit-id="sec-7:div:35" class="state success" hidden>Reply sent.</div>
+              <div data-edit-id="sec-7:div:36" class="state error" hidden>Write a reply before sending.</div>
+              <div data-edit-id="sec-7:div:37" class="state unavailable" hidden>not set up yet</div>
+            </div>
+          </form>
+        </section>
+
+        <aside class="split-panel">
+          <div data-edit-id="sec-7:div:38" class="panel-head sticky"><h2 data-edit-id="sec-7:h2:39">AI triage</h2><button data-edit-id="sec-7:button:40" class="btn small primary" id="summariseThread">Summarise thread</button></div>
+          <div data-edit-id="sec-7:div:41" class="intelligence">
+            <div data-edit-id="sec-7:div:42" class="insight">
+              <div data-edit-id="sec-7:div:43" class="eyebrow">Key points</div>
+              <p data-edit-id="sec-7:p:44" data-bind="unified-inbox.summary_key_points">Approval depends on whether the repository dependency changes the rollout schedule.</p>
+              <button data-edit-id="sec-7:button:45" class="source-marker" data-source="#inbox-source">↗ Email source</button>
+            </div>
+            <div data-edit-id="sec-7:div:46" class="insight">
+              <div data-edit-id="sec-7:div:47" class="eyebrow">Requested actions</div>
+              <p data-edit-id="sec-7:p:48" data-bind="unified-inbox.summary_requested_actions">Confirm the dependency impact, revise the response if needed, and send the final communication.</p>
+              <button data-edit-id="sec-7:button:49" class="source-marker" data-source="#inbox-source">↗ Requested action</button>
+            </div>
+            <p data-edit-id="sec-7:p:50" class="subtle">NexusAI can analyze and extract important information from Gmail and Slack conversations where each service supports real-time access.</p>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- REPOSITORIES -->
+    <section data-sec="sec-8" class="screen" data-screen="/repositories" aria-labelledby="repo-title">
+      <div data-edit-id="sec-8:div:0" class="screen-shell">
+        <header class="page-head">
+          <div data-edit-id="sec-8:div:1"><div data-edit-id="sec-8:div:2" class="eyebrow">Developer intelligence</div><h1 data-edit-id="sec-8:h1:3" id="repo-title">Repositories</h1><p data-edit-id="sec-8:p:4" class="subtle">Browse connected GitHub repositories and select a codebase for analysis.</p></div>
+          <div data-edit-id="sec-8:div:5">
+            <button data-edit-id="sec-8:button:6" class="btn primary external-action">Connect GitHub account</button>
+            <div data-edit-id="sec-8:div:7" class="state unavailable" hidden>not set up yet</div>
+          </div>
+        </header>
+        <div data-edit-id="sec-8:div:8" class="repo-grid">
+          <article class="panel repo-card">
+            <div data-edit-id="sec-8:div:9" class="row spread"><span data-edit-id="sec-8:span:10" class="service-icon">⌘</span><span data-edit-id="sec-8:span:11" class="meta" data-bind="repositories.last_updated_time">Updated 28 min ago</span></div>
+            <div data-edit-id="sec-8:div:12" class="divider"></div>
+            <h2 data-edit-id="sec-8:h2:13" data-bind="repositories.repository_name">nexus-web</h2>
+            <p data-edit-id="sec-8:p:14" class="subtle" data-bind="repositories.repository_description">Workspace client for messaging, contextual AI, and connected productivity services.</p>
+            <button data-edit-id="sec-8:button:15" class="btn primary" data-route="/repositories/nexus-web">Analyse repository</button>
+          </article>
+          <article class="panel repo-card">
+            <div data-edit-id="sec-8:div:16" class="row spread"><span data-edit-id="sec-8:span:17" class="service-icon">⌘</span><span data-edit-id="sec-8:span:18" class="meta" data-bind="repositories.last_updated_time">Updated yesterday</span></div>
+            <div data-edit-id="sec-8:div:19" class="divider"></div>
+            <h2 data-edit-id="sec-8:h2:20" data-bind="repositories.repository_name">integration-core</h2>
+            <p data-edit-id="sec-8:p:21" class="subtle" data-bind="repositories.repository_description">Service adapters for communication, document, social, and repository workflows.</p>
+            <button data-edit-id="sec-8:button:22" class="btn primary" data-route="/repositories/integration-core">Analyse repository</button>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- REPOSITORY ANALYSIS -->
+    <section data-sec="sec-9" class="screen" data-screen="/repositories/:id" aria-label="Repository Analysis">
+      <div data-edit-id="sec-9:div:0" class="screen-shell">
+        <header class="page-head">
+          <div data-edit-id="sec-9:div:1">
+            <div data-edit-id="sec-9:div:2" class="eyebrow">Repository analysis</div>
+            <div data-edit-id="sec-9:div:3" class="row"><h1 data-edit-id="sec-9:h1:4" data-bind="repository-analysis.repository_name">nexus-web</h1><span data-edit-id="sec-9:span:5" class="badge success" data-bind="repository-analysis.status">Completed</span></div>
+            <p data-edit-id="sec-9:p:6" class="subtle" data-bind="repository-analysis.repository_description">Workspace client for messaging, contextual AI, and connected productivity services.</p>
+          </div>
+          <button data-edit-id="sec-9:button:7" class="btn" id="retryAnalysis">Retry analysis</button>
+        </header>
+
+        <div data-edit-id="sec-9:div:8" class="analysis-grid">
+          <section class="panel">
+            <div data-edit-id="sec-9:div:9" class="source-block">
+              <div data-edit-id="sec-9:div:10" class="eyebrow">Code summary</div>
+              <p data-edit-id="sec-9:p:11" data-bind="repository-analysis.code_summary">The client uses route-aware workspace surfaces, shared interaction primitives, and service-specific adapters to keep messaging and analysis context synchronized.</p>
+            </div>
+            <div data-edit-id="sec-9:div:12" class="source-block" id="architecture-source">
+              <div data-edit-id="sec-9:div:13" class="eyebrow">Architecture</div>
+              <p data-edit-id="sec-9:p:14" data-bind="repository-analysis.architecture">A presentation layer coordinates split-panel views, while source adapters normalize conversations, documents, inbox threads, and repository analysis into permission-scoped context.</p>
+            </div>
+            <div data-edit-id="sec-9:div:15" class="source-block">
+              <div data-edit-id="sec-9:div:16" class="eyebrow">Dependencies</div>
+              <div data-edit-id="sec-9:div:17" class="dependency-list" data-bind="repository-analysis.dependencies">Routing · State layer · Realtime client · Source adapters</div>
+            </div>
+            <div data-edit-id="sec-9:div:18" class="source-block" id="issue-source">
+              <div data-edit-id="sec-9:div:19" class="row spread">
+                <div data-edit-id="sec-9:div:20">
+                  <div data-edit-id="sec-9:div:21" class="eyebrow">Potential issue</div>
+                  <p data-edit-id="sec-9:p:22">One integration adapter may retry without preserving source ordering, which can affect real-time thread consistency.</p>
+                </div>
+                <span data-edit-id="sec-9:span:23" class="badge warn" data-bind="repository-analysis.issue_severity">Medium</span>
+              </div>
+            </div>
+          </section>
+
+          <aside class="stack">
+            <section class="panel">
+              <div data-edit-id="sec-9:div:24" class="panel-head"><h2 data-edit-id="sec-9:h2:25">Analysis record</h2></div>
+              <div data-edit-id="sec-9:div:26" class="panel-body stack">
+                <div data-edit-id="sec-9:div:27"><div data-edit-id="sec-9:div:28" class="meta">REQUESTED BY</div><strong data-edit-id="sec-9:strong:29" data-bind="repository-analysis.requested_by_display_name">Jordan Lee</strong></div>
+                <div data-edit-id="sec-9:div:30"><div data-edit-id="sec-9:div:31" class="meta">REQUESTED</div><strong data-edit-id="sec-9:strong:32" class="mono" data-bind="repository-analysis.requested_time">09:18</strong></div>
+                <div data-edit-id="sec-9:div:33"><div data-edit-id="sec-9:div:34" class="meta">COMPLETED</div><strong data-edit-id="sec-9:strong:35" class="mono" data-bind="repository-analysis.completed_time">09:24</strong></div>
+              </div>
+            </section>
+            <form class="panel app-form" id="repositoryQuestionForm">
+              <div data-edit-id="sec-9:div:36" class="panel-head"><h2 data-edit-id="sec-9:h2:37">Ask about this repository</h2></div>
+              <div data-edit-id="sec-9:div:38" class="panel-body">
+                <textarea class="field" required placeholder="Explain a function, dependency, architecture choice, or issue"></textarea>
+                <button data-edit-id="sec-9:button:39" class="btn primary" style="width:100%;margin-top:10px" type="submit">Ask question</button>
+                <div data-edit-id="sec-9:div:40" class="form-states">
+                  <div data-edit-id="sec-9:div:41" class="state idle">Questions use the selected repository analysis.</div>
+                  <div data-edit-id="sec-9:div:42" class="state pending" hidden>Inspecting code context…</div>
+                  <div data-edit-id="sec-9:div:43" class="state success" hidden>Answer generated from repository sources.</div>
+                  <div data-edit-id="sec-9:div:44" class="state error" hidden>Enter a repository question.</div>
+                  <div data-edit-id="sec-9:div:45" class="state unavailable" hidden>not set up yet</div>
+                </div>
+              </div>
+            </form>
+            <div data-edit-id="sec-9:div:46" class="insight">
+              <div data-edit-id="sec-9:div:47" class="eyebrow">Source-linked finding</div>
+              <p data-edit-id="sec-9:p:48">Review retry behavior in the integration adapter.</p>
+              <button data-edit-id="sec-9:button:49" class="source-marker" data-source="#issue-source">↗ Potential issue</button>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <!-- AI ASSISTANT -->
+    <section data-sec="sec-10" class="screen" data-screen="/ai-assistant" aria-labelledby="assistant-title">
+      <div data-edit-id="sec-10:div:0" class="screen-shell">
+        <header class="page-head">
+          <div data-edit-id="sec-10:div:1"><div data-edit-id="sec-10:div:2" class="eyebrow">Permission-aware search</div><h1 data-edit-id="sec-10:h1:3" id="assistant-title">AI Assistant</h1><p data-edit-id="sec-10:p:4" class="subtle">Question conversations, connected documents, emails, Slack messages, and code repositories in one place.</p></div>
+          <span data-edit-id="sec-10:span:5" class="badge ai">Your access only</span>
+        </header>
+
+        <div data-edit-id="sec-10:div:6" class="assistant-stage">
+          <section class="panel" style="display:flex;flex-direction:column">
+            <div data-edit-id="sec-10:div:7" class="answer" id="assistantAnswer">
+              <div data-edit-id="sec-10:div:8" class="eyebrow">Current answer</div>
+              <h2 data-edit-id="sec-10:h2:9">What could affect the product launch?</h2>
+              <p data-edit-id="sec-10:p:10">The shared launch brief and repository analysis point to a release dependency that may alter the rollout sequence. The customer response should remain in draft until the dependency owner confirms impact.</p>
+              <div data-edit-id="sec-10:div:11">
+                <span data-edit-id="sec-10:span:12" class="source-chip" data-bind="ai-assistant.answer_sources"># product-launch</span>
+                <span data-edit-id="sec-10:span:13" class="source-chip" data-bind="ai-assistant.answer_sources">Launch rollout brief</span>
+                <span data-edit-id="sec-10:span:14" class="source-chip" data-bind="ai-assistant.answer_sources">nexus-web analysis</span>
+                <span data-edit-id="sec-10:span:15" class="source-chip" data-bind="ai-assistant.answer_sources">Gmail thread</span>
+              </div>
+            </div>
+            <form class="question-box app-form" id="assistantQuestionForm" style="margin-top:auto">
+              <label data-edit-id="sec-10:label:16">
+                Ask across your permitted workspace
+                <textarea class="field" required data-bind="ai-assistant.question_form" placeholder="Ask about a conversation, document, email, Slack message, or repository"></textarea>
+              </label>
+              <div data-edit-id="sec-10:div:17" class="row spread wrap" style="margin-top:9px">
+                <span data-edit-id="sec-10:span:18" class="meta" data-bind="ai-assistant.source_hint">Sources are limited to content you have permission to access.</span>
+                <button data-edit-id="sec-10:button:19" class="btn primary" type="submit">Ask question</button>
+              </div>
+              <div data-edit-id="sec-10:div:20" class="form-states">
+                <div data-edit-id="sec-10:div:21" class="state idle">Ready to search connected knowledge.</div>
+                <div data-edit-id="sec-10:div:22" class="state pending" hidden>Tracing permitted sources…</div>
+                <div data-edit-id="sec-10:div:23" class="state success" hidden>Answer generated with source references.</div>
+                <div data-edit-id="sec-10:div:24" class="state error" hidden>Enter a question.</div>
+                <div data-edit-id="sec-10:div:25" class="state unavailable" hidden>not set up yet</div>
+              </div>
+            </form>
+          </section>
+
+          <aside class="panel">
+            <div data-edit-id="sec-10:div:26" class="panel-head"><h2 data-edit-id="sec-10:h2:27">Past questions</h2></div>
+            <div data-edit-id="sec-10:div:28" class="collection" id="assistantHistory">
+              <button data-edit-id="sec-10:button:29" class="collection-item selected">
+                <div data-edit-id="sec-10:div:30" class="item-title" data-bind="ai-assistant.past_question">What could affect the product launch?</div>
+                <div data-edit-id="sec-10:div:31" class="meta" data-bind="ai-assistant.past_question_timestamp">Today · 10:26</div>
+              </button>
+              <button data-edit-id="sec-10:button:32" class="collection-item">
+                <div data-edit-id="sec-10:div:33" class="item-title" data-bind="ai-assistant.past_question">Summarize the latest architecture decisions.</div>
+                <div data-edit-id="sec-10:div:34" class="meta" data-bind="ai-assistant.past_question_timestamp">Yesterday · 16:08</div>
+              </button>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <!-- CONNECTIONS -->
+    <section data-sec="sec-11" class="screen" data-screen="/connections" aria-labelledby="connections-title">
+      <div data-edit-id="sec-11:div:0" class="screen-shell">
+        <header class="page-head">
+          <div data-edit-id="sec-11:div:1"><div data-edit-id="sec-11:div:2" class="eyebrow">Connected services</div><h1 data-edit-id="sec-11:h1:3" id="connections-title">Connections</h1><p data-edit-id="sec-11:p:4" class="subtle">Control the services NexusAI can use for communication, documents, code analysis, and supported social publishing.</p></div>
+        </header>
+        <div data-edit-id="sec-11:div:5" class="connection-grid">
+          <article class="panel service-card">
+            <div data-edit-id="sec-11:div:6" class="row spread"><span data-edit-id="sec-11:span:7" class="service-icon">G</span><span data-edit-id="sec-11:span:8" class="badge">Email</span></div>
+            <h2 data-edit-id="sec-11:h2:9" style="margin-top:14px" data-bind="connections.service_name">Gmail</h2>
+            <p data-edit-id="sec-11:p:10" class="subtle" data-bind="connections.disabled_note">Manage email, receive supported real-time updates, summarize threads, and send replies.</p>
+            <div data-edit-id="sec-11:div:11" class="service-actions">
+              <button data-edit-id="sec-11:button:12" class="btn primary external-action" data-bind="connections.connect_control">Connect Gmail</button>
+              <button data-edit-id="sec-11:button:13" class="btn small">Disconnect service</button>
+              <div data-edit-id="sec-11:div:14" class="state unavailable" hidden>not set up yet</div>
+            </div>
+          </article>
+          <article class="panel service-card">
+            <div data-edit-id="sec-11:div:15" class="row spread"><span data-edit-id="sec-11:span:16" class="service-icon">S</span><span data-edit-id="sec-11:span:17" class="badge">Messaging</span></div>
+            <h2 data-edit-id="sec-11:h2:18" style="margin-top:14px" data-bind="connections.service_name">Slack</h2>
+            <p data-edit-id="sec-11:p:19" class="subtle" data-bind="connections.disabled_note">Receive supported real-time messages, send direct messages, and extract actions.</p>
+            <div data-edit-id="sec-11:div:20" class="service-actions">
+              <button data-edit-id="sec-11:button:21" class="btn primary external-action" data-bind="connections.connect_control">Connect Slack</button>
+              <button data-edit-id="sec-11:button:22" class="btn small">Disconnect service</button>
+              <div data-edit-id="sec-11:div:23" class="state unavailable" hidden>not set up yet</div>
+            </div>
+          </article>
+          <article class="panel service-card">
+            <div data-edit-id="sec-11:div:24" class="row spread"><span data-edit-id="sec-11:span:25" class="service-icon">D</span><span data-edit-id="sec-11:span:26" class="badge">Files</span></div>
+            <h2 data-edit-id="sec-11:h2:27" style="margin-top:14px" data-bind="connections.service_name">Google Drive</h2>
+            <p data-edit-id="sec-11:p:28" class="subtle" data-bind="connections.disabled_note">Select files, share them in chatrooms, and analyze their contents with AI.</p>
+            <div data-edit-id="sec-11:div:29" class="service-actions">
+              <button data-edit-id="sec-11:button:30" class="btn primary external-action" data-bind="connections.connect_control">Connect Google Drive</button>
+              <button data-edit-id="sec-11:button:31" class="btn small">Disconnect service</button>
+              <div data-edit-id="sec-11:div:32" class="state unavailable" hidden>not set up yet</div>
+            </div>
+          </article>
+          <article class="panel service-card">
+            <div data-edit-id="sec-11:div:33" class="row spread"><span data-edit-id="sec-11:span:34" class="service-icon">D</span><span data-edit-id="sec-11:span:35" class="badge">Documents</span></div>
+            <h2 data-edit-id="sec-11:h2:36" style="margin-top:14px" data-bind="connections.service_name">Google Docs</h2>
+            <p data-edit-id="sec-11:p:37" class="subtle" data-bind="connections.disabled_note">Share documents, save summaries, extract key information, and answer questions.</p>
+            <div data-edit-id="sec-11:div:38" class="service-actions">
+              <button data-edit-id="sec-11:button:39" class="btn primary external-action" data-bind="connections.connect_control">Connect Google Docs</button>
+              <button data-edit-id="sec-11:button:40" class="btn small">Disconnect service</button>
+              <div data-edit-id="sec-11:div:41" class="state unavailable" hidden>not set up yet</div>
+            </div>
+          </article>
+          <article class="panel service-card">
+            <div data-edit-id="sec-11:div:42" class="row spread"><span data-edit-id="sec-11:span:43" class="service-icon">S</span><span data-edit-id="sec-11:span:44" class="badge">Spreadsheets</span></div>
+            <h2 data-edit-id="sec-11:h2:45" style="margin-top:14px" data-bind="connections.service_name">Google Sheets</h2>
+            <p data-edit-id="sec-11:p:46" class="subtle" data-bind="connections.disabled_note">Select spreadsheets, share them in chats, summarize them, and discuss their contents.</p>
+            <div data-edit-id="sec-11:div:47" class="service-actions">
+              <button data-edit-id="sec-11:button:48" class="btn primary external-action" data-bind="connections.connect_control">Connect Google Sheets</button>
+              <button data-edit-id="sec-11:button:49" class="btn small">Disconnect service</button>
+              <div data-edit-id="sec-11:div:50" class="state unavailable" hidden>not set up yet</div>
+            </div>
+          </article>
+          <article class="panel service-card">
+            <div data-edit-id="sec-11:div:51" class="row spread"><span data-edit-id="sec-11:span:52" class="service-icon">⌘</span><span data-edit-id="sec-11:span:53" class="badge">Code</span></div>
+            <h2 data-edit-id="sec-11:h2:54" style="margin-top:14px" data-bind="connections.service_name">GitHub</h2>
+            <p data-edit-id="sec-11:p:55" class="subtle" data-bind="connections.disabled_note">Browse repositories and analyze source code, structure, dependencies, architecture, functions, and issues.</p>
+            <div data-edit-id="sec-11:div:56" class="service-actions">
+              <button data-edit-id="sec-11:button:57" class="btn primary external-action" data-bind="connections.connect_control">Connect GitHub</button>
+              <button data-edit-id="sec-11:button:58" class="btn small">Disconnect service</button>
+              <div data-edit-id="sec-11:div:59" class="state unavailable" hidden>not set up yet</div>
+            </div>
+          </article>
+          <article class="panel service-card">
+            <div data-edit-id="sec-11:div:60" class="row spread"><span data-edit-id="sec-11:span:61" class="service-icon">I</span><span data-edit-id="sec-11:span:62" class="badge">Social</span></div>
+            <h2 data-edit-id="sec-11:h2:63" style="margin-top:14px" data-bind="connections.service_name">Instagram</h2>
+            <p data-edit-id="sec-11:p:64" class="subtle" data-bind="connections.disabled_note">Share supported chat content and AI-generated images or videos, subject to API permissions.</p>
+            <div data-edit-id="sec-11:div:65" class="service-actions">
+              <button data-edit-id="sec-11:button:66" class="btn primary external-action" data-bind="connections.connect_control">Connect Instagram</button>
+              <button data-edit-id="sec-11:button:67" class="btn small">Disconnect service</button>
+              <div data-edit-id="sec-11:div:68" class="state unavailable" hidden>not set up yet</div>
+            </div>
+          </article>
+          <article class="panel service-card">
+            <div data-edit-id="sec-11:div:69" class="row spread"><span data-edit-id="sec-11:span:70" class="service-icon">F</span><span data-edit-id="sec-11:span:71" class="badge">Social</span></div>
+            <h2 data-edit-id="sec-11:h2:72" style="margin-top:14px" data-bind="connections.service_name">Facebook</h2>
+            <p data-edit-id="sec-11:p:73" class="subtle" data-bind="connections.disabled_note">Turn supported conversations or AI-generated content into posts, subject to API permissions.</p>
+            <div data-edit-id="sec-11:div:74" class="service-actions">
+              <button data-edit-id="sec-11:button:75" class="btn primary external-action" data-bind="connections.connect_control">Connect Facebook</button>
+              <button data-edit-id="sec-11:button:76" class="btn small">Disconnect service</button>
+              <div data-edit-id="sec-11:div:77" class="state unavailable" hidden>not set up yet</div>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ADMIN USERS -->
+    <section data-sec="sec-12" class="screen" data-screen="/admin/users" aria-labelledby="users-title">
+      <div data-edit-id="sec-12:div:0" class="screen-shell">
+        <header class="page-head">
+          <div data-edit-id="sec-12:div:1"><div data-edit-id="sec-12:div:2" class="eyebrow">Account governance</div><h1 data-edit-id="sec-12:h1:3" id="users-title">Admin Users</h1><p data-edit-id="sec-12:p:4" class="subtle">Manage user accounts, roles, permissions, and access status.</p></div>
+        </header>
+        <section class="panel table-wrap">
+          <table>
+            <thead><tr><th data-edit-id="sec-12:th:5">Display name</th><th data-edit-id="sec-12:th:6">Email</th><th data-edit-id="sec-12:th:7">Role</th><th data-edit-id="sec-12:th:8">Status</th><th data-edit-id="sec-12:th:9">Joined</th><th data-edit-id="sec-12:th:10">Actions</th></tr></thead>
+            <tbody>
+              <tr>
+                <td data-edit-id="sec-12:td:11" data-bind="admin-users.display_name">Maya Chen</td>
+                <td data-edit-id="sec-12:td:12" data-bind="admin-users.email">maya@example.com</td>
+                <td data-edit-id="sec-12:td:13"><select class="field" data-bind="admin-users.role"><option>Connected Professional</option><option>Developer Collaborator</option><option>Admin</option></select></td>
+                <td data-edit-id="sec-12:td:14"><span data-edit-id="sec-12:span:15" class="badge success" data-bind="admin-users.status">Active</span></td>
+                <td data-edit-id="sec-12:td:16" class="mono" data-bind="admin-users.joined_date">18 Mar 2025</td>
+                <td data-edit-id="sec-12:td:17"><button data-edit-id="sec-12:button:18" class="btn small">Change role</button><button data-edit-id="sec-12:button:19" class="btn danger small">Suspend user</button><button data-edit-id="sec-12:button:20" class="btn small">Restore user</button></td>
+              </tr>
+              <tr>
+                <td data-edit-id="sec-12:td:21" data-bind="admin-users.display_name">Jordan Lee</td>
+                <td data-edit-id="sec-12:td:22" data-bind="admin-users.email">jordan@example.com</td>
+                <td data-edit-id="sec-12:td:23"><select class="field" data-bind="admin-users.role"><option>Developer Collaborator</option><option>Connected Professional</option><option>Admin</option></select></td>
+                <td data-edit-id="sec-12:td:24"><span data-edit-id="sec-12:span:25" class="badge success" data-bind="admin-users.status">Active</span></td>
+                <td data-edit-id="sec-12:td:26" class="mono" data-bind="admin-users.joined_date">19 Mar 2025</td>
+                <td data-edit-id="sec-12:td:27"><button data-edit-id="sec-12:button:28" class="btn small">Change role</button><button data-edit-id="sec-12:button:29" class="btn danger small">Suspend user</button><button data-edit-id="sec-12:button:30" class="btn small">Restore user</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+      </div>
+    </section>
+
+    <!-- ADMIN MODERATION -->
+    <section data-sec="sec-13" class="screen" data-screen="/admin/moderation" aria-labelledby="moderation-title">
+      <div data-edit-id="sec-13:div:0" class="screen-shell">
+        <header class="page-head">
+          <div data-edit-id="sec-13:div:1"><div data-edit-id="sec-13:div:2" class="eyebrow">Conversation governance</div><h1 data-edit-id="sec-13:h1:3" id="moderation-title">Admin Moderation</h1><p data-edit-id="sec-13:p:4" class="subtle">Review context and take accountable action across group chats and conversations.</p></div>
+        </header>
+        <section class="panel">
+          <div data-edit-id="sec-13:div:5" class="panel-head">
+            <div data-edit-id="sec-13:div:6"><h2 data-edit-id="sec-13:h2:7" data-bind="admin-moderation.channel_name"># product-launch</h2><span data-edit-id="sec-13:span:8" class="meta" data-bind="admin-moderation.action_time">Today · 11:08</span></div>
+            <span data-edit-id="sec-13:span:9" class="badge warn" data-bind="admin-moderation.moderation_action">Review requested</span>
+          </div>
+          <div data-edit-id="sec-13:div:10" class="panel-body">
+            <div data-edit-id="sec-13:div:11" class="summary-card">
+              <div data-edit-id="sec-13:div:12" class="meta">MESSAGE</div>
+              <p data-edit-id="sec-13:p:13" style="margin:8px 0 0" data-bind="admin-moderation.message_body">This message was submitted for moderator review with its surrounding conversation context.</p>
+            </div>
+            <div data-edit-id="sec-13:div:14" class="form-grid" style="margin-top:14px">
+              <div data-edit-id="sec-13:div:15"><div data-edit-id="sec-13:div:16" class="meta">ACTION TARGET</div><strong data-edit-id="sec-13:strong:17" data-bind="admin-moderation.action_target">Message</strong></div>
+              <div data-edit-id="sec-13:div:18"><div data-edit-id="sec-13:div:19" class="meta">REASON</div><strong data-edit-id="sec-13:strong:20" data-bind="admin-moderation.action_reason">Reported by a channel participant</strong></div>
+              <div data-edit-id="sec-13:div:21"><div data-edit-id="sec-13:div:22" class="meta">ACTOR</div><strong data-edit-id="sec-13:strong:23" data-bind="admin-moderation.actor_display_name">Sam Patel</strong></div>
+            </div>
+            <div data-edit-id="sec-13:div:24" class="row wrap" style="margin-top:18px">
+              <button data-edit-id="sec-13:button:25" class="btn danger">Remove message</button>
+              <button data-edit-id="sec-13:button:26" class="btn danger">Remove channel</button>
+            </div>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <!-- ADMIN INTEGRATIONS -->
+    <section data-sec="sec-14" class="screen" data-screen="/admin/integrations" aria-labelledby="integrations-title">
+      <div data-edit-id="sec-14:div:0" class="screen-shell">
+        <header class="page-head">
+          <div data-edit-id="sec-14:div:1"><div data-edit-id="sec-14:div:2" class="eyebrow">Service governance</div><h1 data-edit-id="sec-14:h1:3" id="integrations-title">Admin Integrations</h1><p data-edit-id="sec-14:p:4" class="subtle">Configure third-party integration availability and attribute each change.</p></div>
+        </header>
+        <section class="panel table-wrap">
+          <table>
+            <thead><tr><th data-edit-id="sec-14:th:5">Service</th><th data-edit-id="sec-14:th:6">Availability</th><th data-edit-id="sec-14:th:7">Last updated</th><th data-edit-id="sec-14:th:8">Updated by</th><th data-edit-id="sec-14:th:9">Control</th></tr></thead>
+            <tbody>
+              <tr>
+                <td data-edit-id="sec-14:td:10" data-bind="admin-integrations.service_name">Gmail</td>
+                <td data-edit-id="sec-14:td:11"><span data-edit-id="sec-14:span:12" class="badge success" data-bind="admin-integrations.availability">Available</span></td>
+                <td data-edit-id="sec-14:td:13" class="mono" data-bind="admin-integrations.last_updated_time">Today · 08:30</td>
+                <td data-edit-id="sec-14:td:14" data-bind="admin-integrations.updater_display_name">Sam Patel</td>
+                <td data-edit-id="sec-14:td:15"><button data-edit-id="sec-14:button:16" class="btn small integration-toggle">Toggle service</button></td>
+              </tr>
+              <tr>
+                <td data-edit-id="sec-14:td:17" data-bind="admin-integrations.service_name">Slack</td>
+                <td data-edit-id="sec-14:td:18"><span data-edit-id="sec-14:span:19" class="badge success" data-bind="admin-integrations.availability">Available</span></td>
+                <td data-edit-id="sec-14:td:20" class="mono" data-bind="admin-integrations.last_updated_time">Yesterday · 17:12</td>
+                <td data-edit-id="sec-14:td:21" data-bind="admin-integrations.updater_display_name">Sam Patel</td>
+                <td data-edit-id="sec-14:td:22"><button data-edit-id="sec-14:button:23" class="btn small integration-toggle">Toggle service</button></td>
+              </tr>
+              <tr>
+                <td data-edit-id="sec-14:td:24" data-bind="admin-integrations.service_name">Instagram</td>
+                <td data-edit-id="sec-14:td:25"><span data-edit-id="sec-14:span:26" class="badge warn" data-bind="admin-integrations.availability">Limited by API permissions</span></td>
+                <td data-edit-id="sec-14:td:27" class="mono" data-bind="admin-integrations.last_updated_time">Yesterday · 14:40</td>
+                <td data-edit-id="sec-14:td:28" data-bind="admin-integrations.updater_display_name">Sam Patel</td>
+                <td data-edit-id="sec-14:td:29"><button data-edit-id="sec-14:button:30" class="btn small integration-toggle">Toggle service</button></td>
+              </tr>
+              <tr>
+                <td data-edit-id="sec-14:td:31" data-bind="admin-integrations.service_name">Facebook</td>
+                <td data-edit-id="sec-14:td:32"><span data-edit-id="sec-14:span:33" class="badge warn" data-bind="admin-integrations.availability">Limited by API permissions</span></td>
+                <td data-edit-id="sec-14:td:34" class="mono" data-bind="admin-integrations.last_updated_time">Yesterday · 14:40</td>
+                <td data-edit-id="sec-14:td:35" data-bind="admin-integrations.updater_display_name">Sam Patel</td>
+                <td data-edit-id="sec-14:td:36"><button data-edit-id="sec-14:button:37" class="btn small integration-toggle">Toggle service</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <svg class="trace-layer" id="traceLayer" aria-hidden="true" hidden>
+    <path class="trace-path" id="tracePath" />
+  </svg>
+
+  <script>
+    (() => {
+      const routeTitles = {
+        "/workspace-home":"Workspace Home",
+        "/people":"People Directory",
+        "/inbox":"Unified Inbox",
+        "/repositories":"Repositories",
+        "/ai-assistant":"AI Assistant",
+        "/connections":"Connections",
+        "/admin/users":"Admin Users",
+        "/admin/moderation":"Admin Moderation",
+        "/admin/integrations":"Admin Integrations",
+        "/channels/:id":"Channel Conversation",
+        "/channels/:id/details":"Channel Details",
+        "/direct/:id":"Direct Conversation",
+        "/repositories/:id":"Repository Analysis"
+      };
+
+      const screenTitle = document.getElementById("screenTitle");
+      const sidebar = document.getElementById("sidebar");
+      const serviceNames = ["Gmail","Slack","Google Drive","Google Docs","Google Sheets","GitHub","Instagram","Facebook"];
+      const storedServices = JSON.parse(localStorage.getItem("nexus-services") || "{}");
+      window.nexusServices = Object.fromEntries(serviceNames.map(name => [name, Boolean(storedServices[name])]));
+
+      function normalizeRoute(path) {
+        if (/^\/channels\/[^/]+\/details$/.test(path)) return "/channels/:id/details";
+        if (/^\/channels\/[^/]+$/.test(path)) return "/channels/:id";
+        if (/^\/direct\/[^/]+$/.test(path)) return "/direct/:id";
+        if (/^\/repositories\/[^/]+$/.test(path)) return "/repositories/:id";
+        return routeTitles[path] ? path : "/workspace-home";
+      }
+
+      function navigate(path, push = true) {
+        const normalized = normalizeRoute(path);
+        document.querySelectorAll(".screen").forEach(screen => {
+          screen.classList.toggle("active", screen.dataset.screen === normalized);
+        });
+
+        document.querySelectorAll(".primary-nav .nav-item").forEach(item => {
+          item.classList.toggle("active", item.getAttribute("href") === normalized);
+        });
+
+        screenTitle.textContent = routeTitles[normalized];
+        document.title = `NexusAI — ${routeTitles[normalized]}`;
+        sidebar.classList.remove("open");
+
+        if (push && location.pathname !== path) {
+          history.pushState({path}, "", path);
+        }
+      }
+
+      document.addEventListener("click", event => {
+        const routeControl = event.target.closest("[data-route]");
+        if (routeControl) {
+          event.preventDefault();
+          navigate(routeControl.dataset.route);
+        }
+      });
+
+      window.addEventListener("popstate", () => navigate(location.pathname, false));
+
+      if (!routeTitles[location.pathname] &&
+          !/^\/channels\/[^/]+/.test(location.pathname) &&
+          !/^\/direct\/[^/]+/.test(location.pathname) &&
+          !/^\/repositories\/[^/]+$/.test(location.pathname)) {
+        history.replaceState({path:"/workspace-home"}, "", "/workspace-home");
+      }
+      navigate(location.pathname, false);
+
+      document.getElementById("menuToggle").addEventListener("click", () => sidebar.classList.toggle("open"));
+
+      const createPanel = document.getElementById("createChannelPanel");
+      document.getElementById("createChannelOpen").addEventListener("click", () => {
+        createPanel.hidden = false;
+        createPanel.scrollIntoView({behavior:"smooth", block:"center"});
+      });
+      document.getElementById("closeCreateChannel").addEventListener("click", () => createPanel.hidden = true);
+      document.getElementById("startDmHome").addEventListener("click", () => navigate("/people"));
+      document.getElementById("newDm").addEventListener("click", () => navigate("/people"));
+      const channelState = JSON.parse(localStorage.getItem("nexus-channel") || `{"name":"product-launch","purpose":"Coordinate launch decisions, assets, and customer communication.","archived":false}`);
+
+      function persistChannel() {
+        localStorage.setItem("nexus-channel", JSON.stringify(channelState));
+        document.querySelectorAll("[data-bind$='.channel_name']").forEach(node => {
+          if (node.textContent.trim().includes("product-launch") || node.closest("[data-screen='/channels/:id/details'],[data-screen='/channels/:id']")) {
+            node.textContent = `# ${channelState.name}`;
+          }
+        });
+        document.querySelectorAll("[data-bind$='.channel_purpose']").forEach(node => {
+          if (node.textContent.includes("Coordinate launch") || node.closest("[data-screen='/channels/:id/details'],[data-screen='/channels/:id']")) {
+            node.textContent = channelState.purpose;
+          }
+        });
+        document.querySelectorAll("[data-bind$='.archived_badge'],[data-bind$='.archived_state']").forEach(badge => {
+          badge.textContent = channelState.archived ? "Archived" : "Active";
+          badge.classList.toggle("success", !channelState.archived);
+          badge.classList.toggle("critical", channelState.archived);
+        });
+        const composer = document.querySelector("[data-screen='/channels/:id'] .composer");
+        if (composer) {
+          composer.querySelectorAll("textarea,button").forEach(control => control.disabled = channelState.archived);
+        }
+      }
+
+      persistChannel();
+
+      document.getElementById("createChannelForm").addEventListener("submit", event => {
+        event.preventDefault();
+        const form = event.currentTarget;
+        if (!form.checkValidity()) {
+          setFormState(form, "error");
+          form.reportValidity();
+          return;
+        }
+        channelState.name = form.elements.channel.value.trim().replace(/^#\s*/, "");
+        channelState.purpose = form.elements.purpose.value.trim();
+        channelState.archived = false;
+        persistChannel();
+        const route = `/channels/${encodeURIComponent(channelState.name)}`;
+        const item = document.createElement("button");
+        item.className = "select-row selected";
+        item.dataset.route = route;
+        item.innerHTML = `<div><div class="item-title"></div><div class="item-copy"></div></div><div class="stack" style="justify-items:end"><span class="meta">1 member</span><span class="meta">${new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}</span><span class="btn small">Open channel</span></div>`;
+        item.querySelector(".item-title").textContent = `# ${channelState.name}`;
+        item.querySelector(".item-copy").textContent = channelState.purpose;
+        document.querySelector(".channel-list").appendChild(item);
+        const collectionItem = document.createElement("button");
+        collectionItem.className = "collection-item selected";
+        collectionItem.innerHTML = `<div class="item-title"></div><div class="meta">Active conversation</div>`;
+        collectionItem.querySelector(".item-title").textContent = `# ${channelState.name}`;
+        document.querySelector("[data-screen='/channels/:id'] .collection").prepend(collectionItem);
+        createPanel.hidden = true;
+        form.reset();
+        navigate(route);
+      });
+
+      document.getElementById("channelSettingsForm").addEventListener("submit", event => {
+        event.preventDefault();
+        const form = event.currentTarget;
+        if (!form.checkValidity()) {
+          setFormState(form, "error");
+          form.reportValidity();
+          return;
+        }
+        channelState.name = form.elements.channelName.value.trim().replace(/^#\s*/, "");
+        channelState.purpose = form.elements.channelPurpose.value.trim();
+        persistChannel();
+        setFormState(form, "success");
+      });
+
+      document.getElementById("inviteMember").addEventListener("click", () => {
+        const choices = ["Sam Patel","Taylor Morgan","Priya Shah"];
+        const name = prompt(`Invite a member: ${choices.join(", ")}`, choices[0]);
+        if (!name || !choices.includes(name)) return;
+        const row = document.createElement("tr");
+        row.innerHTML = `<td></td><td class="mono"></td><td><button class="btn danger small">Remove member</button></td>`;
+        row.children[0].textContent = name;
+        row.children[1].textContent = new Date().toLocaleDateString([], {day:"2-digit",month:"short",year:"numeric"});
+        document.querySelector("#channelMembers tbody").appendChild(row);
+      });
+
+      document.getElementById("channelMembers").addEventListener("click", event => {
+        if (event.target.textContent.trim() === "Remove member") event.target.closest("tr").remove();
+      });
+
+      document.getElementById("archiveChannel").addEventListener("click", () => {
+        channelState.archived = true;
+        persistChannel();
+        document.querySelector("[data-bind='channel-details.archived_date']").textContent =
+          new Date().toLocaleDateString([], {day:"2-digit",month:"short",year:"numeric"});
+      });
+
+      document.getElementById("leaveChannel").addEventListener("click", () => {
+        document.querySelectorAll(".avatars").forEach(node => node.textContent = node.textContent.replace(/(?: · )?AR/, ""));
+        navigate("/workspace-home");
+      });
+
+      function setFormState(form, stateName) {
+        form.querySelectorAll(".form-states .state").forEach(state => {
+          state.hidden = !state.classList.contains(stateName);
+        });
+      }
+
+      document.querySelectorAll("form.app-form").forEach(form => {
+        form.addEventListener("submit", event => {
+          event.preventDefault();
+          if (form.closest("[data-screen='/channels/:id'],[data-screen='/direct/:id'],[data-screen='/inbox'],[data-screen='/repositories/:id'],[data-screen='/ai-assistant'],[data-screen='/channels/:id/details'],#createChannelPanel")) return;
+          if (!form.checkValidity()) {
+            setFormState(form, "error");
+            form.reportValidity();
+            return;
+          }
+          setFormState(form, "pending");
+          form.querySelectorAll("button").forEach(button => button.disabled = true);
+          setTimeout(() => {
+            setFormState(form, "success");
+            form.querySelectorAll("button").forEach(button => button.disabled = false);
+          }, 650);
+        });
+        form.addEventListener("input", () => setFormState(form, "idle"));
+      });
+
+      document.querySelectorAll(".external-action").forEach(button => {
+        button.addEventListener("click", () => {
+          if (button.closest(".composer") ||
+              /^(Connect|Save summary)/.test(button.textContent.trim())) return;
+          const scope = button.closest(".service-card,.toolbelt,.panel-body,.intelligence,.page-head,.composer,.row") || button.parentElement;
+          const unavailable = scope.querySelector(".state.unavailable") ||
+                              button.parentElement.querySelector(".state.unavailable");
+          if (unavailable) {
+            unavailable.hidden = false;
+            button.setAttribute("aria-describedby", "external-unavailable");
+          }
+        });
+      });
+
+      const serviceFromLabel = label => {
+        const names = ["Google Drive","Google Docs","Google Sheets","Instagram","Facebook"];
+        return names.find(name => label.includes(name));
+      };
+
+      function chatTime() {
+        return new Date().toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"});
+      }
+
+      function appendChatMessage(form, body, attachment, media) {
+        const panel = form.closest(".split-panel");
+        const conversation = panel && panel.querySelector(".conversation");
+        if (!conversation) return;
+        const article = document.createElement("article");
+        article.className = "message";
+        article.innerHTML = `<span class="avatar">AR</span><div><div class="message-head"><strong>Alex Rivera</strong><time>${chatTime()}</time></div><div class="message-body"></div></div>`;
+        article.querySelector(".message-body").textContent = body;
+        const content = article.lastElementChild;
+        if (attachment) {
+          const node = document.createElement("div");
+          node.className = "attachment";
+          node.dataset.documentTitle = attachment.title;
+          node.innerHTML = `<span class="service-icon">${attachment.service.charAt(0)}</span><div><strong></strong><div class="meta"></div></div>`;
+          node.querySelector("strong").textContent = attachment.title;
+          node.querySelector(".meta").textContent = `${attachment.service} attachment · selected in NexusAI`;
+          content.appendChild(node);
+          document.dispatchEvent(new CustomEvent("nexus:attachment", {detail:attachment}));
+        }
+        if (media) content.appendChild(media);
+        conversation.appendChild(article);
+        form.reset();
+        setFormState(form, "success");
+        article.scrollIntoView({behavior:"smooth", block:"center"});
+      }
+
+      function openFilePicker(button, service) {
+        const choices = {
+          "Google Drive":["Launch rollout brief","Customer response draft","Campaign assets"],
+          "Google Docs":["Architecture review notes","Launch messaging plan","Customer FAQ"],
+          "Google Sheets":["Rollout tracker","Release dependencies","Campaign budget"]
+        };
+        const dialog = document.createElement("dialog");
+        dialog.style.cssText = "max-width:430px;width:calc(100% - 32px);padding:0;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--text)";
+        dialog.innerHTML = `<div class="panel-head"><h2>Select from ${service}</h2><button class="btn small" type="button">Close</button></div><div class="panel-body stack"></div>`;
+        choices[service].forEach(title => {
+          const choice = document.createElement("button");
+          choice.className = "btn";
+          choice.type = "button";
+          choice.textContent = title;
+          choice.addEventListener("click", () => {
+            appendChatMessage(button.closest("form"), `Shared ${title}`, {service,title});
+            dialog.close();
+          });
+          dialog.querySelector(".stack").appendChild(choice);
+        });
+        dialog.querySelector(".panel-head .btn").addEventListener("click", () => dialog.close());
+        dialog.addEventListener("close", () => dialog.remove());
+        document.body.appendChild(dialog);
+        dialog.showModal();
+      }
+
+      document.querySelectorAll("[data-screen='/channels/:id'] .composer,[data-screen='/direct/:id'] .composer").forEach(form => {
+        form.addEventListener("submit", event => {
+          event.preventDefault();
+          if (!form.checkValidity()) {
+            setFormState(form, "error");
+            form.reportValidity();
+            return;
+          }
+          setFormState(form, "pending");
+          setTimeout(() => appendChatMessage(form, form.querySelector("textarea").value.trim()), 220);
+        });
+      });
+
+      document.addEventListener("click", event => {
+        const button = event.target.closest("button");
+        if (!button) return;
+        const label = button.textContent.trim();
+        const composer = button.closest(".composer");
+        if (composer && /^(Google Drive|Google Docs|Google Sheets)$/.test(label)) {
+          openFilePicker(button, label);
+          return;
+        }
+        if (composer && /^(Generate image|Generate video)$/.test(label)) {
+          let preview = composer.querySelector(".generated-preview");
+          if (preview) preview.remove();
+          preview = document.createElement("div");
+          preview.className = "generated-preview media-tile";
+          preview.style.marginBottom = "9px";
+          preview.innerHTML = `<div><strong>${label === "Generate image" ? "Generated launch image" : "Generated launch video preview"}</strong><div class="meta">Ready to preview and share</div><button class="btn small" type="button" style="margin-top:8px">Share in chat</button></div>`;
+          composer.insertBefore(preview, composer.querySelector(".form-states"));
+          preview.querySelector("button").addEventListener("click", () => {
+            const media = preview.cloneNode(true);
+            media.querySelector("button").remove();
+            appendChatMessage(composer, `${label === "Generate image" ? "Image" : "Video"} generated with NexusAI`, null, media);
+            preview.remove();
+          });
+          return;
+        }
+        if (label === "Summarise channel") {
+          const rail = button.closest(".split-panel");
+          const messages = document.querySelectorAll("[data-screen='/channels/:id'] .conversation .message-body");
+          const summary = rail.querySelector(".insight p");
+          const insight = rail.querySelectorAll(".insight p")[1];
+          summary.textContent = `${messages.length} messages reviewed. The team is coordinating launch communication, shared files, generated media, and repository readiness.`;
+          insight.textContent = "The latest activity is now included; resolve the release dependency before customer publication.";
+          button.textContent = `Summarised · ${chatTime()}`;
+          return;
+        }
+        if (label === "Save summary to Google Docs") {
+          const connected = window.nexusServices && window.nexusServices["Google Docs"];
+          const state = button.nextElementSibling;
+          if (!connected) {
+            if (state) state.hidden = false;
+          } else {
+            if (state) state.hidden = true;
+            button.textContent = "Saved to Google Docs";
+            button.classList.add("primary");
+          }
+          return;
+        }
+        if (/^Share to (Instagram|Facebook)$/.test(label)) {
+          const service = serviceFromLabel(label);
+          const connected = window.nexusServices && window.nexusServices[service];
+          const state = button.parentElement.querySelector(".state.unavailable");
+          if (!connected) {
+            if (state) state.hidden = false;
+          } else {
+            if (state) state.hidden = true;
+            button.textContent = service === "Instagram" ? "Shared to Instagram" : "Facebook post created";
+            button.disabled = true;
+          }
+          return;
+        }
+        if (label === "Share in chat" && !button.closest(".generated-preview")) {
+          button.textContent = "Shared in chat";
+          button.disabled = true;
+        }
+      });
+
+      function serviceForControl(button) {
+        const text = button.textContent.trim();
+        return serviceNames.find(name => text.includes(name)) ||
+          (text.includes("Drive") ? "Google Drive" : null);
+      }
+
+      function renderServiceState(service) {
+        const connected = window.nexusServices[service];
+        document.querySelectorAll("button").forEach(button => {
+          if (serviceForControl(button) !== service) return;
+          const text = button.textContent.trim();
+          if (/^(Connect|.+ Connected$)/.test(text)) {
+            button.textContent = connected ? `${service} Connected` : `Connect ${service}${service === "GitHub" ? " account" : ""}`;
+            button.classList.toggle("primary", !connected);
+            button.setAttribute("aria-pressed", String(connected));
+          }
+        });
+        document.querySelectorAll(".service-card").forEach(card => {
+          const heading = card.querySelector("h2");
+          if (!heading || heading.textContent.trim() !== service) return;
+          const connect = [...card.querySelectorAll("button")].find(button => button.textContent.includes(service));
+          const disconnect = [...card.querySelectorAll("button")].find(button => button.textContent.trim() === "Disconnect service");
+          if (connect) connect.hidden = connected;
+          if (disconnect) {
+            disconnect.hidden = !connected;
+            disconnect.disabled = !connected;
+          }
+          let status = card.querySelector(".connection-status");
+          if (!status) {
+            status = document.createElement("div");
+            status.className = "state connection-status";
+            card.querySelector(".service-actions").prepend(status);
+          }
+          status.className = `state connection-status ${connected ? "success" : "idle"}`;
+          status.textContent = connected ? "Connected" : "Not connected";
+        });
+      }
+
+      function setService(service, connected) {
+        window.nexusServices[service] = connected;
+        localStorage.setItem("nexus-services", JSON.stringify(window.nexusServices));
+        renderServiceState(service);
+        window.dispatchEvent(new CustomEvent("nexus:service", {detail:{service,connected}}));
+      }
+
+      serviceNames.forEach(renderServiceState);
+
+      document.addEventListener("click", event => {
+        const button = event.target.closest("button");
+        if (!button) return;
+        const service = serviceForControl(button);
+        if (service && button.textContent.trim().startsWith("Connect")) {
+          setService(service, true);
+          const unavailable = button.parentElement.querySelector(".state.unavailable");
+          if (unavailable) unavailable.hidden = true;
+        }
+        if (button.textContent.trim() === "Disconnect service") {
+          const card = button.closest(".service-card");
+          const heading = card && card.querySelector("h2");
+          if (heading) setService(heading.textContent.trim(), false);
+        }
+      });
+
+      const inboxScreen = document.querySelector("[data-screen='/inbox']");
+      const inboxConversation = inboxScreen.querySelector(".conversation");
+      const inboxForm = inboxScreen.querySelector(".composer");
+
+      function appendInboxMessage(body, service, incoming = false) {
+        const article = document.createElement("article");
+        article.className = "source-block";
+        article.innerHTML = `<div class="row spread"><strong></strong><span class="badge"></span></div><div class="meta"></div><p style="margin:12px 0 0"></p>`;
+        article.querySelector("strong").textContent = incoming ? (service === "Slack" ? "Slack update" : "New email") : "Alex Rivera";
+        article.querySelector(".badge").textContent = service;
+        article.querySelector(".meta").textContent = chatTime();
+        article.querySelector("p").textContent = body;
+        inboxConversation.appendChild(article);
+        inboxScreen.querySelectorAll("[data-bind='unified-inbox.last_activity_time']").forEach(node => node.textContent = chatTime());
+        article.scrollIntoView({behavior:"smooth", block:"center"});
+      }
+
+      inboxForm.addEventListener("submit", event => {
+        event.preventDefault();
+        if (!inboxForm.checkValidity()) {
+          setFormState(inboxForm, "error");
+          inboxForm.reportValidity();
+          return;
+        }
+        if (!window.nexusServices.Gmail) {
+          setFormState(inboxForm, "unavailable");
+          return;
+        }
+        appendInboxMessage(inboxForm.querySelector("textarea").value.trim(), "Gmail");
+        inboxForm.reset();
+        setFormState(inboxForm, "success");
+      });
+
+      inboxScreen.addEventListener("click", event => {
+        const button = event.target.closest("button");
+        if (!button) return;
+        if (button.textContent.trim() === "Send Slack message") {
+          if (!window.nexusServices.Slack) {
+            const state = button.parentElement.querySelector(".state.unavailable");
+            if (state) state.hidden = false;
+            return;
+          }
+          const text = inboxForm.querySelector("textarea").value.trim();
+          if (!text) {
+            inboxForm.querySelector("textarea").focus();
+            setFormState(inboxForm, "error");
+            return;
+          }
+          appendInboxMessage(text, "Slack");
+          inboxForm.reset();
+          button.textContent = "Slack message sent";
+          setTimeout(() => button.textContent = "Send Slack message", 1200);
+        }
+      });
+
+      document.getElementById("summariseThread").addEventListener("click", event => {
+        const messages = [...inboxConversation.querySelectorAll("p")].map(node => node.textContent.trim());
+        inboxScreen.querySelector("[data-bind='unified-inbox.summary_key_points']").textContent =
+          `${messages.length} thread messages reviewed. The rollout remains dependent on repository readiness and customer-response approval.`;
+        inboxScreen.querySelector("[data-bind='unified-inbox.summary_requested_actions']").textContent =
+          "Confirm dependency impact, update the rollout response, and communicate the final decision through the connected service.";
+        event.currentTarget.textContent = `Summarised · ${chatTime()}`;
+      });
+
+      window.addEventListener("nexus:service", event => {
+        const {service,connected} = event.detail;
+        if (!connected || !["Gmail","Slack"].includes(service)) return;
+        setTimeout(() => {
+          const item = document.createElement("button");
+          item.className = "collection-item";
+          item.innerHTML = `<div class="item-title"></div><div class="meta"></div><div class="meta"></div>`;
+          item.children[0].textContent = service === "Gmail" ? "New rollout confirmation" : "New Slack project update";
+          item.children[1].textContent = service;
+          item.children[2].textContent = chatTime();
+          inboxScreen.querySelector(".collection").appendChild(item);
+          appendInboxMessage(
+            service === "Gmail" ? "A new connected email update arrived for the rollout thread." : "A new Slack update arrived from the launch workspace.",
+            service,
+            true
+          );
+        }, 550);
+      });
+
+      document.querySelectorAll(".integration-toggle").forEach(button => {
+        button.addEventListener("click", () => {
+          const badge = button.closest("tr").querySelector("[data-bind='admin-integrations.availability']");
+          const enabled = badge.textContent.trim() === "Available";
+          badge.textContent = enabled ? "Unavailable" : "Available";
+          badge.classList.toggle("success", !enabled);
+          badge.classList.toggle("critical", enabled);
+        });
+      });
+
+      document.querySelector("[data-screen='/admin/users'] tbody").addEventListener("click", event => {
+        const button = event.target.closest("button");
+        if (!button) return;
+        const row = button.closest("tr");
+        const status = row.querySelector("[data-bind='admin-users.status']");
+        const select = row.querySelector("select");
+        if (button.textContent.trim() === "Change role") {
+          localStorage.setItem(`nexus-role-${row.cells[1].textContent.trim()}`, select.value);
+          button.textContent = "Role saved";
+          setTimeout(() => button.textContent = "Change role", 900);
+        }
+        if (button.textContent.trim() === "Suspend user") {
+          status.textContent = "Suspended";
+          status.className = "badge critical";
+          row.querySelectorAll("button")[1].disabled = true;
+          row.querySelectorAll("button")[2].disabled = false;
+        }
+        if (button.textContent.trim() === "Restore user") {
+          status.textContent = "Active";
+          status.className = "badge success";
+          row.querySelectorAll("button")[1].disabled = false;
+          row.querySelectorAll("button")[2].disabled = true;
+        }
+      });
+
+      document.querySelectorAll("[data-screen='/admin/users'] tbody tr").forEach(row => {
+        const saved = localStorage.getItem(`nexus-role-${row.cells[1].textContent.trim()}`);
+        if (saved) row.querySelector("select").value = saved;
+        row.querySelectorAll("button")[2].disabled = true;
+      });
+
+      const moderationPanel = document.querySelector("[data-screen='/admin/moderation'] .panel");
+      moderationPanel.addEventListener("click", event => {
+        const button = event.target.closest("button");
+        if (!button || !button.classList.contains("danger")) return;
+        if (button.dataset.confirm !== "true") {
+          moderationPanel.querySelectorAll(".moderation-confirm").forEach(node => node.remove());
+          const confirm = document.createElement("span");
+          confirm.className = "state error moderation-confirm";
+          confirm.textContent = `Press “${button.textContent.trim()}” again to confirm.`;
+          button.after(confirm);
+          button.dataset.confirm = "true";
+          setTimeout(() => {
+            button.dataset.confirm = "";
+            confirm.remove();
+          }, 4000);
+          return;
+        }
+        moderationPanel.querySelectorAll(".moderation-confirm").forEach(node => node.remove());
+        if (button.textContent.trim() === "Remove message") {
+          const message = moderationPanel.querySelector("[data-bind='admin-moderation.message_body']");
+          message.textContent = "Message removed by moderator.";
+          moderationPanel.querySelector("[data-bind='admin-moderation.moderation_action']").textContent = "Message removed";
+        } else {
+          moderationPanel.querySelector("[data-bind='admin-moderation.moderation_action']").textContent = "Channel removed";
+          moderationPanel.querySelector("[data-bind='admin-moderation.channel_name']").textContent += " · Removed";
+          button.disabled = true;
+        }
+        moderationPanel.querySelector("[data-bind='admin-moderation.action_time']").textContent = `Today · ${chatTime()}`;
+      });
+
+      document.addEventListener("nexus:attachment", event => {
+        const directScreen = document.querySelector("[data-screen='/direct/:id']");
+        if (!directScreen.classList.contains("active")) return;
+        const context = document.getElementById("directDocumentContext");
+        const title = event.detail.title;
+        context.innerHTML = `<div class="insight"><div class="eyebrow">Selected document</div><h3></h3><div class="stack"><button class="btn small" data-doc-action="Analyze">Analyze</button><button class="btn small" data-doc-action="Summarize">Summarize</button><button class="btn small" data-doc-action="Extract key information">Extract key information</button><button class="btn small" data-doc-action="Ask about document">Ask about document</button></div><div class="summary-card" style="margin-top:10px" hidden></div></div>`;
+        context.querySelector("h3").textContent = title;
+      });
+
+      document.getElementById("directDocumentContext").addEventListener("click", event => {
+        const button = event.target.closest("[data-doc-action]");
+        if (!button) return;
+        const result = button.closest(".insight").querySelector(".summary-card");
+        const title = button.closest(".insight").querySelector("h3").textContent;
+        const outputs = {
+          "Analyze": `${title} is available for contextual analysis and comparison with this conversation.`,
+          "Summarize": `${title} focuses on rollout coordination, dependencies, and customer communication.`,
+          "Extract key information": "Key information: confirm dependency impact, preserve source ordering, and approve the final response.",
+          "Ask about document": `Answer: ${title} supports the current launch discussion and should be reviewed before publication.`
+        };
+        result.textContent = outputs[button.dataset.docAction];
+        result.hidden = false;
+      });
+
+      document.getElementById("repositoryQuestionForm").addEventListener("submit", event => {
+        event.preventDefault();
+        const form = event.currentTarget;
+        const input = form.querySelector("textarea");
+        if (!input.value.trim()) {
+          setFormState(form, "error");
+          input.focus();
+          return;
+        }
+        const question = input.value.toLowerCase();
+        let source = "#architecture-source";
+        let label = "Architecture";
+        let answer = "The presentation layer coordinates route-aware split panels while source adapters normalize permission-scoped context.";
+        if (question.includes("dependency")) {
+          source = "[data-bind='repository-analysis.dependencies']";
+          label = "Dependencies";
+          answer = "Routing, state, real-time clients, and source adapters are the primary dependency groups.";
+        } else if (question.includes("issue")) {
+          source = "#issue-source";
+          label = "Potential issue";
+          answer = "Retry behavior may lose source ordering and affect real-time thread consistency.";
+        } else if (question.includes("function")) {
+          label = "Code summary";
+          answer = "Shared interaction primitives coordinate messaging, analysis, and service-specific adapter functions.";
+        }
+        let panel = form.parentElement.querySelector(".repository-answer");
+        if (!panel) {
+          panel = document.createElement("div");
+          panel.className = "insight repository-answer";
+          form.after(panel);
+        }
+        panel.innerHTML = `<div class="eyebrow">Source-linked answer</div><p></p><button class="source-marker">↗ ${label}</button>`;
+        panel.querySelector("p").textContent = answer;
+        panel.querySelector("button").dataset.source = source;
+        panel.querySelector("button").addEventListener("click", markerEvent => {
+          const target = document.querySelector(source);
+          if (target) drawTrace(markerEvent.currentTarget, target);
+        });
+        setFormState(form, "success");
+      });
+
+      document.getElementById("retryAnalysis").addEventListener("click", event => {
+        const button = event.currentTarget;
+        const status = document.querySelector("[data-bind='repository-analysis.status']");
+        button.disabled = true;
+        button.textContent = "Analysing · 0%";
+        status.textContent = "Running";
+        status.classList.remove("success");
+        let progress = 0;
+        const timer = setInterval(() => {
+          progress += 25;
+          button.textContent = `Analysing · ${progress}%`;
+          if (progress === 100) {
+            clearInterval(timer);
+            button.disabled = false;
+            button.textContent = "Retry analysis";
+            status.textContent = "Completed";
+            status.classList.add("success");
+            document.querySelector("[data-bind='repository-analysis.completed_time']").textContent = chatTime();
+          }
+        }, 220);
+      });
+
+      const assistantSources = [
+        {name:"# product-launch", text:"The launch conversation identifies a release dependency and pending customer communication.", permitted:true},
+        {name:"Launch rollout brief", text:"The rollout brief sequences launch decisions, assets, and customer communication.", permitted:true},
+        {name:"nexus-web analysis", text:"Repository retry behavior may affect source ordering and release readiness.", permitted:true},
+        {name:"Gmail thread", text:"The customer response should remain in draft until dependency impact is confirmed.", permitted:true},
+        {name:"Restricted finance plan", text:"Confidential financial projections.", permitted:false}
+      ];
+
+      document.getElementById("assistantQuestionForm").addEventListener("submit", event => {
+        event.preventDefault();
+        const form = event.currentTarget;
+        const input = form.querySelector("textarea");
+        const question = input.value.trim();
+        if (!question) {
+          setFormState(form, "error");
+          input.focus();
+          return;
+        }
+        const permitted = assistantSources.filter(source => source.permitted);
+        const terms = question.toLowerCase().split(/\W+/).filter(term => term.length > 3);
+        let matches = permitted.filter(source => terms.some(term =>
+          `${source.name} ${source.text}`.toLowerCase().includes(term)
+        ));
+        if (!matches.length) matches = permitted.slice(0, 2);
+        const answer = document.getElementById("assistantAnswer");
+        answer.innerHTML = `<div class="eyebrow">Current answer</div><h2></h2><p></p><div class="assistant-sources"></div>`;
+        answer.querySelector("h2").textContent = question;
+        if (matches.length) {
+          answer.querySelector("p").textContent = matches.map(source => source.text).join(" ");
+          matches.forEach(source => {
+            const chip = document.createElement("span");
+            chip.className = "source-chip";
+            chip.textContent = source.name;
+            answer.querySelector(".assistant-sources").appendChild(chip);
+          });
+        } else {
+          answer.querySelector("p").textContent = "No permitted sources matched this question.";
+        }
+        form.querySelector("[data-bind='ai-assistant.source_hint']").textContent =
+          matches.length ? `${matches.length} permitted source${matches.length === 1 ? "" : "s"} used.` : "No permitted sources were available.";
+        const history = document.createElement("button");
+        history.className = "collection-item selected";
+        history.innerHTML = `<div class="item-title"></div><div class="meta"></div>`;
+        history.querySelector(".item-title").textContent = question;
+        history.querySelector(".meta").textContent = `Today · ${chatTime()}`;
+        document.getElementById("assistantHistory").prepend(history);
+        input.value = "";
+        setFormState(form, "success");
+      });
+
+      const traceLayer = document.getElementById("traceLayer");
+      const tracePath = document.getElementById("tracePath");
+      let traceTimer;
+
+      let activeTrace = null;
+
+      function positionTrace(trigger, target) {
+        const a = trigger.getBoundingClientRect();
+        const b = target.getBoundingClientRect();
+        const x1 = a.left + a.width / 2;
+        const y1 = a.top + a.height / 2;
+        const x2 = b.left + Math.min(30, b.width / 2);
+        const y2 = b.top + Math.min(34, b.height / 2);
+        const bend = Math.max(70, Math.abs(x2 - x1) * .42);
+        tracePath.setAttribute("d", `M ${x1} ${y1} C ${x1 - bend} ${y1}, ${x2 + bend} ${y2}, ${x2} ${y2}`);
+      }
+
+      function drawTrace(trigger, target) {
+        document.querySelectorAll(".focus-source").forEach(el => el.classList.remove("focus-source"));
+        target.scrollIntoView({behavior:"smooth", block:"center"});
+        activeTrace = {trigger,target};
+
+        setTimeout(() => {
+          positionTrace(trigger, target);
+          traceLayer.hidden = false;
+          tracePath.classList.remove("trace-path");
+          void tracePath.getBoundingClientRect();
+          tracePath.classList.add("trace-path");
+          target.classList.add("focus-source");
+          clearTimeout(traceTimer);
+          traceTimer = setTimeout(() => {
+            traceLayer.hidden = true;
+            target.classList.remove("focus-source");
+            activeTrace = null;
+          }, 2050);
+        }, 220);
+      }
+
+      const updateActiveTrace = () => {
+        if (activeTrace) positionTrace(activeTrace.trigger, activeTrace.target);
+      };
+      window.addEventListener("resize", updateActiveTrace);
+      document.querySelectorAll(".screen,.split-panel").forEach(node => node.addEventListener("scroll", updateActiveTrace, {passive:true}));
+
+      document.querySelectorAll(".workspace-split .collection").forEach(collection => {
+        collection.addEventListener("click", event => {
+          const item = event.target.closest(".collection-item");
+          if (!item || item.dataset.route) return;
+          collection.querySelectorAll(".collection-item").forEach(node => node.classList.toggle("selected", node === item));
+          const shell = collection.closest(".workspace-split");
+          const panels = shell.querySelectorAll(":scope > .split-panel");
+          panels.forEach((panel, index) => {
+            if (index === 0) return;
+            panel.classList.remove("context-transition");
+            void panel.offsetWidth;
+            panel.classList.add("context-transition");
+          });
+          const title = item.querySelector(".item-title");
+          const centerTitle = panels[1] && panels[1].querySelector(".panel-head h2");
+          if (title && centerTitle) centerTitle.textContent = title.textContent;
+          const railEyebrow = panels[2] && panels[2].querySelector(".eyebrow");
+          if (railEyebrow) railEyebrow.textContent = `Context for ${title ? title.textContent : "selection"}`;
+        });
+      });
+
+      document.querySelectorAll(".source-marker").forEach(marker => {
+        marker.addEventListener("click", () => {
+          const target = document.querySelector(marker.dataset.source);
+          if (target) drawTrace(marker, target);
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,64 @@
+# Dockerfile.lambda — Lambda container image variant of backend/Dockerfile.
+#
+# Used by the SERVERLESS deploy target (S3 + API Gateway + Lambda + CloudFront).
+# The ECS path still uses backend/Dockerfile untouched. Selected at build time
+# via the buildspec DOCKERFILE env var.
+#
+# Same alpine base as the ECS Dockerfile (~50MB, not ~400MB debian): `prisma
+# generate` runs in the builder stage, so Prisma's native musl engine
+# (linux-musl-openssl-3.0.x) is generated for this exact base — no binaryTargets
+# change needed. openssl is installed for Prisma's libssl. Differences vs ECS:
+#  - AWS Lambda Web Adapter extension dropped in /opt/extensions. Its binary is
+#    statically linked (musl-safe). The Express app needs ZERO changes — it keeps
+#    calling app.listen(3000); LWA turns the API Gateway v2 event into a normal
+#    HTTP request. The JWT Authorization header passes through untouched.
+#  - The Stripe webhook (express.raw() before express.json()) keeps working: the
+#    v2 payload body is reconstructed by LWA unchanged.
+#  - NO `prisma db push` / seed in CMD — on Lambda that would run on every cold
+#    start. Schema sync + seed move to a deploy-time step (deployServerless.ts).
+#  - bootstrap.js S3 hot-pull dropped — Lambda images are immutable.
+
+# ── builder ──────────────────────────────────────────────────────────────────
+FROM public.ecr.aws/docker/library/node:20-alpine AS builder
+WORKDIR /app
+RUN apk add --no-cache openssl
+COPY package*.json ./
+# Boilerplate ships NO package-lock.json — npm ci aborts without one. Use
+# npm install so it resolves from package.json (incl. any deps codegen added).
+RUN npm install --no-audit --no-fund --legacy-peer-deps
+COPY . .
+RUN mkdir -p public
+RUN npx prisma generate
+RUN npm run build
+
+# ── runner (Lambda container image) ────────────────────────────────────────────
+FROM public.ecr.aws/docker/library/node:20-alpine AS runner
+WORKDIR /app
+RUN apk add --no-cache openssl
+ENV NODE_ENV=production
+# LWA forwards the Lambda invocation event (API Gateway v2 payload) to the
+# Express server on :3000 — no app changes needed.
+ENV AWS_LWA_PORT=3000
+# Wait for /health before declaring the sandbox ready (faster, safer cold start).
+# NOTE: boilerplate health route is /health (NOT /api/health).
+ENV AWS_LWA_READINESS_CHECK_PATH=/health
+
+# AWS Lambda Web Adapter — drop the extension in /opt/extensions. Static binary,
+# musl-safe. No app changes.
+COPY --from=public.ecr.aws/awsguru/aws-lambda-adapter:0.8.4 /lambda-adapter /opt/extensions/lambda-adapter
+
+COPY package*.json ./
+RUN npm install --omit=dev --no-audit --no-fund --legacy-peer-deps
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+COPY prisma ./prisma
+# Built SPA (vite output). On serverless the SPA is served from S3/CloudFront and
+# CloudFront only routes /api/* to the Lambda, so this static catch-all is never
+# hit in prod — kept harmless so hitting the backend URL directly still serves
+# the SPA (useful for testing).
+COPY --from=builder /app/public ./public
+
+EXPOSE 3000
+# No db push / seed / bootstrap here — those moved to the deploy-time step.
+CMD ["node", "dist/src/index.js"]
