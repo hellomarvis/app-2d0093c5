@@ -1,9 +1,10 @@
 import { Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
 import { handlePrismaError } from '../lib/handleError';
-import { IntegrationNotConfiguredError, handleSeamError } from '../lib/integrationSeam';
+import { IntegrationNotConfiguredError, handleSeamError, notConfigured } from '../lib/integrationSeam';
 import { generateText, TextGenError } from '../custom/capabilities/textGen';
 import { generateImage, ImageGenError } from '../custom/capabilities/imageGen';
+import { isConfigured as isVideoConfigured } from '../custom/capabilities/videoGen';
 
 async function membership(channelId: number, userId: number) {
   return prisma.channelMember.findUnique({ where: { channelId_userId: { channelId, userId } } });
@@ -379,7 +380,6 @@ async function generateSummary(req: Request, res: Response): Promise<any> {
   }
 }
 
-// @integration-seam video-gen chat-video
 async function generateMedia(req: Request, res: Response): Promise<any> {
   const channel = await loadChannel(req, res);
   if (!channel) return;
@@ -394,10 +394,25 @@ async function generateMedia(req: Request, res: Response): Promise<any> {
   }
 
   if (kind === 'video') {
+    if (!isVideoConfigured()) return notConfigured(res, 'Video Generation');
+    if (typeof providedUrl !== 'string' || !providedUrl.startsWith('http')) {
+      return res.status(400).json({ message: 'mediaUrl is required for video messages' });
+    }
     try {
-      throw new IntegrationNotConfiguredError('Google AI (Gemini & Veo)');
+      const message = await prisma.message.create({
+        data: {
+          channelId: channel.id,
+          authorId: req.user!.id,
+          authorDisplayName: req.user!.email,
+          body: prompt.trim(),
+          kind: 'ai_video',
+          mediaUrl: providedUrl,
+          prompt: prompt.trim(),
+        },
+      });
+      await prisma.channel.update({ where: { id: channel.id }, data: { lastMessageAt: new Date() } });
+      return res.status(201).json(message);
     } catch (error) {
-      if (handleSeamError(error, res)) return;
       return handlePrismaError(error, res);
     }
   }

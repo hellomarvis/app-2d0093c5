@@ -9,6 +9,7 @@ import { InitialsAvatar } from '@/components/common/InitialsAvatar';
 import { EmptyState, ErrorState, LoadingState } from '@/components/common/states';
 import { apiClient, ApiError } from '@/lib/apiClient';
 import { GenerateImageButton } from '@/components/capabilities/GenerateImageButton';
+import { GenerateVideoButton } from '@/components/capabilities/GenerateVideoButton';
 
 interface Member { id: number; userId: number; memberDisplayName: string; isOwner: boolean }
 interface ChannelDetail {
@@ -28,6 +29,7 @@ export const ChannelConversation = (): React.ReactElement => {
   const [sending, setSending] = React.useState(false);
   const [seamNotice, setSeamNotice] = React.useState<string | null>(null);
   const [imagePrompt, setImagePrompt] = React.useState('');
+  const [videoPrompt, setVideoPrompt] = React.useState('');
 
   const load = React.useCallback(() => {
     if (!id) return;
@@ -108,12 +110,20 @@ export const ChannelConversation = (): React.ReactElement => {
                   </div>
                   <div className="mt-0.5 text-base text-foreground">{message.body}</div>
                   {message.mediaUrl && (
-                    <img
-                      src={message.mediaUrl}
-                      alt={message.body}
-                      className="mt-2 max-w-xs rounded-lg border border-border"
-                      loading="lazy"
-                    />
+                    message.kind === 'ai_video' ? (
+                      <video
+                        src={message.mediaUrl}
+                        controls
+                        className="mt-2 max-w-xs rounded-lg border border-border"
+                      />
+                    ) : (
+                      <img
+                        src={message.mediaUrl}
+                        alt={message.body}
+                        className="mt-2 max-w-xs rounded-lg border border-border"
+                        loading="lazy"
+                      />
+                    )
                   )}
                 </div>
               </article>
@@ -169,6 +179,32 @@ export const ChannelConversation = (): React.ReactElement => {
                 .post(`/api/channels/${id}/media`, { kind: 'image', prompt: imagePrompt.trim(), mediaUrl: result.url })
                 .then(() => { setImagePrompt(''); load(); toast.success('Image shared in channel'); })
                 .catch((err) => toast.error(err instanceof ApiError ? err.message : 'Failed to share image'));
+            }}
+            onError={(msg) => toast.error(msg)}
+          />
+        </div>
+
+        <div className="mt-6 border-t border-border pt-4">
+          <h3 className="text-sm font-semibold text-foreground mb-2">Generate AI video</h3>
+          <p className="text-xs text-muted-foreground mb-3">Describe a short video clip to share in the channel.</p>
+          <Input
+            value={videoPrompt}
+            onChange={(e) => setVideoPrompt(e.target.value)}
+            placeholder="A timelapse of code being written, soft keyboard sounds…"
+            className="mb-2 text-sm"
+            disabled={channel.isArchived}
+          />
+          <GenerateVideoButton
+            prompt={videoPrompt.trim()}
+            durationSecs={4}
+            disabled={channel.isArchived || !videoPrompt.trim()}
+            label="Generate video"
+            onReady={(job) => {
+              if (!job.videoUrl) return;
+              apiClient
+                .post(`/api/channels/${id}/media`, { kind: 'video', prompt: videoPrompt.trim(), mediaUrl: job.videoUrl })
+                .then(() => { setVideoPrompt(''); load(); toast.success('Video shared in channel'); })
+                .catch((err) => toast.error(err instanceof ApiError ? err.message : 'Failed to share video'));
             }}
             onError={(msg) => toast.error(msg)}
           />

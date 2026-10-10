@@ -209,3 +209,60 @@ model IntegrationSetting {
   @@unique([tenantId, serviceName])
   @@map("integration_settings")
 }
+
+model VeoVideoJob {
+  id           String    @id @default(uuid())
+  // The app's own User.id. NO Prisma @relation: schemaAppend is append-only and
+  // a relation would require adding a back-reference field to model User.
+  userId       Int       @map("user_id")
+  prompt       String
+  // Veo's long-running operation name, polled until done. Worthless after the
+  // provider expires the job, which is why it is nullable and never exposed.
+  operationId  String?   @map("operation_id")
+  // pending | ready | failed
+  status       String    @default("pending")
+  // OUR permanent copy, never the provider's URI — theirs dies in ~48h. Set to
+  // the provider URI only as a degraded fallback when the app's own storage
+  // refused the file, and errorMessage then says so.
+  videoUrl     String?   @map("video_url")
+  durationSecs Int       @default(8) @map("duration_secs")
+  resolution   String    @default("720p")
+  aspectRatio  String    @default("16:9") @map("aspect_ratio")
+  model        String    @default("")
+  errorMessage String?   @map("error_message")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  // Drives both the user's history list and the per-user daily cost cap.
+  @@index([userId, createdAt])
+  @@map("veo_video_jobs")
+}
+
+model AiVideoJob {
+  id           String    @id @default(uuid())
+  // The app's own User.id. NO Prisma @relation: schemaAppend is append-only and
+  // a relation would require adding a back-reference field to model User.
+  userId       Int       @map("user_id")
+  prompt       String
+  // Which provider the facade pointed at when this job was submitted; the poll
+  // asks the same provider even after a switch.
+  provider     String    @default("")
+  // The provider's opaque job handle, polled until done. Never exposed.
+  operationId  String?   @map("operation_id")
+  // pending | ready | failed
+  status       String    @default("pending")
+  // OUR permanent copy, never the provider's URL — theirs expires. Set to the
+  // provider URL only as a degraded fallback when the app's own storage refused
+  // the file, and errorMessage then says so.
+  videoUrl     String?   @map("video_url")
+  durationSecs Int       @default(8) @map("duration_secs")
+  aspectRatio  String    @default("16:9") @map("aspect_ratio")
+  model        String    @default("")
+  errorMessage String?   @map("error_message")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  // Drives both the user's history list and the per-user daily cost cap.
+  @@index([userId, createdAt])
+  @@map("ai_video_jobs")
+}
