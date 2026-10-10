@@ -6,3 +6,5 @@ build/
 *.log
 .env
 .env.local
+frontend/credentials.json
+!backend/public/assets/**

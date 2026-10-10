@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
 import { handlePrismaError } from '../lib/handleError';
 import { IntegrationNotConfiguredError, handleSeamError } from '../lib/integrationSeam';
+import { generateText, TextGenError } from '../custom/capabilities/textGen';
 
 async function membership(channelId: number, userId: number) {
   return prisma.channelMember.findUnique({ where: { channelId_userId: { channelId, userId } } });
@@ -312,7 +313,6 @@ async function deleteMessage(req: Request, res: Response): Promise<any> {
   return res.json({ ...updated, body: 'Message removed' });
 }
 
-// @integration-seam text-gen conversation-summary
 async function generateSummary(req: Request, res: Response): Promise<any> {
   const channel = await loadChannel(req, res);
   if (!channel) return;
@@ -323,9 +323,57 @@ async function generateSummary(req: Request, res: Response): Promise<any> {
   if (nonDeleted === 0) return res.status(400).json({ message: 'Nothing to summarise yet.' });
 
   try {
-    throw new IntegrationNotConfiguredError('OpenAI');
+    const messages = await prisma.message.findMany({
+      where: { channelId: channel.id, isDeleted: false },
+      orderBy: { createdAt: 'asc' },
+      take: 100,
+    });
+
+    const transcript = messages
+      .map((m) => `${m.authorDisplayName}: ${m.body}`)
+      .join('\n');
+
+    const result = await generateText({
+      system:
+        'You are an expert conversation analyst. Summarize the conversation and respond with a JSON object with exactly these keys: summaryText (string — a concise overall summary), keyInsights (array of strings — key takeaways), keyDecisions (array of strings — decisions made in the conversation). Be concise and accurate.',
+      messages: [{ role: 'user', content: `Summarize this conversation from channel #${channel.name}:\n\n${transcript}` }],
+      maxTokens: 1500,
+    });
+
+    let summaryText = '';
+    let keyInsights: string[] = [];
+    let keyDecisions: string[] = [];
+
+    try {
+      const parsed = JSON.parse(result.content);
+      summaryText = typeof parsed.summaryText === 'string' ? parsed.summaryText : result.content;
+      keyInsights = Array.isArray(parsed.keyInsights) ? parsed.keyInsights : [];
+      keyDecisions = Array.isArray(parsed.keyDecisions) ? parsed.keyDecisions : [];
+    } catch {
+      summaryText = result.content;
+    }
+
+    const actor = await prisma.user.findUnique({ where: { id: req.user!.id } });
+    const summary = await prisma.conversationSummary.create({
+      data: {
+        channelId: channel.id,
+        summaryText,
+        keyInsights,
+        keyDecisions,
+        messagesCovered: messages.length,
+        generatedById: req.user!.id,
+        generatedByName: actor?.displayName ?? req.user!.email,
+      },
+    });
+
+    await prisma.channel.update({ where: { id: channel.id }, data: { summaryStatus: 'idle' } });
+
+    return res.json(summary);
   } catch (error) {
-    if (handleSeamError(error, res)) return;
+    if (error instanceof TextGenError) {
+      await prisma.channel.update({ where: { id: channel.id }, data: { summaryStatus: 'failed' } });
+      return res.status(error.status).json({ message: error.message });
+    }
     return handlePrismaError(error, res);
   }
 }

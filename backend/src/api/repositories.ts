@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
 import { handlePrismaError } from '../lib/handleError';
-import { IntegrationNotConfiguredError, handleSeamError } from '../lib/integrationSeam';
+import { generateText, TextGenError } from '../custom/capabilities/textGen';
 
 // GET /api/repositories — the signed-in user's own repository analyses
 async function listRepositories(req: Request, res: Response): Promise<any> {
@@ -40,7 +40,6 @@ async function getRepository(req: Request, res: Response): Promise<any> {
   return res.json(repo);
 }
 
-// @integration-seam text-gen repository-analysis
 async function analyzeRepository(req: Request, res: Response): Promise<any> {
   const repo = await loadRepo(req, res);
   if (!repo) return;
@@ -58,20 +57,58 @@ async function analyzeRepository(req: Request, res: Response): Promise<any> {
   if (claimed.count === 0) return res.status(409).json({ message: 'An analysis is already running for this repository.' });
 
   try {
-    throw new IntegrationNotConfiguredError('OpenAI');
+    const result = await generateText({
+      system:
+        'You are an expert software architect. Analyze the given repository and respond with a JSON object with exactly these keys: codeSummary (string), architectureText (string), dependenciesText (string), potentialIssues (array of strings). Be thorough but concise.',
+      messages: [
+        {
+          role: 'user',
+          content: `Analyze this repository:\nOwner: ${repo.repoOwnerName}\nName: ${repo.repoName}\nDescription: ${repo.repoDescription}\nDefault branch: ${repo.defaultBranch}`,
+        },
+      ],
+      maxTokens: 2000,
+    });
+
+    let codeSummary = '';
+    let architectureText = '';
+    let dependenciesText = '';
+    let potentialIssues: string[] = [];
+
+    try {
+      const parsed = JSON.parse(result.content);
+      codeSummary = typeof parsed.codeSummary === 'string' ? parsed.codeSummary : '';
+      architectureText = typeof parsed.architectureText === 'string' ? parsed.architectureText : '';
+      dependenciesText = typeof parsed.dependenciesText === 'string' ? parsed.dependenciesText : '';
+      potentialIssues = Array.isArray(parsed.potentialIssues) ? parsed.potentialIssues : [];
+    } catch {
+      codeSummary = result.content;
+    }
+
+    const updated = await prisma.repositoryAnalysis.update({
+      where: { id: repo.id },
+      data: {
+        status: 'complete',
+        codeSummary,
+        architectureText,
+        dependenciesText,
+        potentialIssues,
+        completedAt: new Date(),
+        errorMessage: null,
+      },
+    });
+    return res.json(updated);
   } catch (error) {
-    if (error instanceof IntegrationNotConfiguredError) {
+    if (error instanceof TextGenError) {
       await prisma.repositoryAnalysis.update({
         where: { id: repo.id },
         data: { status: 'failed', errorMessage: error.message },
       });
-      if (handleSeamError(error, res)) return;
+      return res.status(error.status).json({ message: error.message });
     }
     return handlePrismaError(error, res);
   }
 }
 
-// @integration-seam text-gen repository-question
 async function askQuestion(req: Request, res: Response): Promise<any> {
   const repo = await loadRepo(req, res);
   if (!repo) return;
@@ -81,9 +118,34 @@ async function askQuestion(req: Request, res: Response): Promise<any> {
   }
 
   try {
-    throw new IntegrationNotConfiguredError('OpenAI');
+    const context = [
+      repo.codeSummary && `Code Summary:\n${repo.codeSummary}`,
+      repo.architectureText && `Architecture:\n${repo.architectureText}`,
+      repo.dependenciesText && `Dependencies:\n${repo.dependenciesText}`,
+    ]
+      .filter(Boolean)
+      .join('\n\n');
+
+    const result = await generateText({
+      system: `You are an expert software engineer. Answer questions about the repository ${repo.repoOwnerName}/${repo.repoName}.${context ? `\n\n${context}` : ''}`,
+      messages: [{ role: 'user', content: question }],
+      maxTokens: 1000,
+    });
+
+    const actor = await prisma.user.findUnique({ where: { id: req.user!.id } });
+    const repoQuestion = await prisma.repoQuestion.create({
+      data: {
+        analysisId: repo.id,
+        questionText: question,
+        answerText: result.content,
+        askedByName: actor?.displayName ?? req.user!.email,
+      },
+    });
+    return res.json(repoQuestion);
   } catch (error) {
-    if (handleSeamError(error, res)) return;
+    if (error instanceof TextGenError) {
+      return res.status(error.status).json({ message: error.message });
+    }
     return handlePrismaError(error, res);
   }
 }
