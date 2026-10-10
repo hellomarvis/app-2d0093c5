@@ -1,0 +1,83 @@
+# Lumexa background verification — platform-managed, do not edit.
+#
+# Dispatched by the Lumexa platform after this app's first deploy, and again
+# after the owner's integration keys are installed and deployed. Runs the
+# Claude Code CLI to test the live app against its PRD in a real browser; only
+# if something is broken it fixes the code, hands the fix to the platform
+# (which redeploys) and retests. Logic lives in .github/lumexa-verify/run.sh.
+#
+# Needs (org level): secret CLAUDE_CODE_OAUTH_TOKEN (from `claude setup-token`).
+# Optional org variables: LUMEXA_VERIFY_TEST_MODEL, LUMEXA_VERIFY_FIX_MODEL.
+name: Lumexa verify
+
+on:
+  repository_dispatch:
+    types: [lumexa-verify]
+
+permissions:
+  contents: write # push the fix branch only; the platform moves main
+  actions: read # --reuse-tests: download the previous run's test suite
+
+concurrency:
+  group: lumexa-verify
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    # Hard ceiling. run.sh paces itself on RUN_BUDGET_MINS (below it, leaving
+    # room for setup and the artifact upload) and ends by itself before this.
+    timeout-minutes: 300
+    env:
+      RUN_BUDGET_MINS: 280
+      RUN_ID: ${{ github.event.client_payload.run_id }}
+      RUN_TOKEN: ${{ github.event.client_payload.token }}
+      API_BASE: ${{ github.event.client_payload.api_base }}
+      REUSE_TESTS: ${{ github.event.client_payload.reuse_tests }}
+      CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+      GH_PUSH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      TEST_MODEL: ${{ vars.LUMEXA_VERIFY_TEST_MODEL || 'sonnet' }}
+      FIX_MODEL: ${{ vars.LUMEXA_VERIFY_FIX_MODEL || 'opus' }}
+    steps:
+      - name: Mask run token
+        run: echo "::add-mask::${RUN_TOKEN}"
+
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          # The token is never left in .git/config: run.sh passes it per git
+          # command and strips it from Claude's environment, so the fixer can
+          # only ever change files — it can push nothing itself.
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Verify against the PRD
+        run: bash .github/lumexa-verify/run.sh
+
+      - name: Report crash or timeout
+        if: failure() || cancelled()
+        run: bash .github/lumexa-verify/run.sh --report-crash
+
+      - name: Upload tests, results and logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lumexa-verify
+          # Debug window only — GitHub deletes it automatically after a day, so
+          # finished runs leave no storage behind.
+          retention-days: 1
+          if-no-files-found: ignore
+          path: |
+            ${{ runner.temp }}/lumexa-verify
+            !${{ runner.temp }}/lumexa-verify/harness/node_modules
+            !${{ runner.temp }}/lumexa-verify/harness-src
+            !${{ runner.temp }}/lumexa-verify/mcp-output
+            !${{ runner.temp }}/lumexa-verify/prev
+            !${{ runner.temp }}/lumexa-verify/prev.zip
+            !${{ runner.temp }}/lumexa-verify/artifacts.json
+            !${{ runner.temp }}/lumexa-verify/resp.json
+            !${{ runner.temp }}/lumexa-verify/prompt.txt
